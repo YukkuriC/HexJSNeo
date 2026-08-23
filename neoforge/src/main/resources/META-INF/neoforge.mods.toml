@@ -1,0 +1,40 @@
+modLoader = "javafml"
+loaderVersion = "[0,)"
+issueTrackerURL = "https://github.com/YukkuriC/${mod_name}/issues"
+license = "MIT"
+
+[[mods]]
+modId = "${modid}"
+version = "${version}"
+displayName = "${mod_name}"
+authors = "YukkuriC"
+description = '''
+Provides a way to register patterns via KubeJS
+'''
+logoFile = "logo.png"
+updateJSONURL = "https://api.modrinth.com/updates/${modid}/neoforge_updates.json"
+displayURL = "https://modrinth.com/mod/${modid}"
+
+[[mixins]]
+config = "hexjsneo.mixins.json"
+
+[[dependencies.${modid}]]
+modId = "minecraft"
+type = "required"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${modid}]]
+modId = "hexcasting"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${modid}]]
+modId = "kubejs"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"

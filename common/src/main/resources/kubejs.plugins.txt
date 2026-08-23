@@ -1,0 +1,1 @@
+io.yukkuric.hexjsneo.interop.KJSPluginHJS

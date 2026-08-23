@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "hexjsneo",
+  "version": "${version}",
+  "name": "HexJSNeo",
+  "description": "Provides a way to register patterns via KubeJS",
+  "authors": [
+    "YukkuriC"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/hexjsneo",
+    "sources": "https://github.com/YukkuriC/HexJSNeo",
+    "issues": "https://github.com/YukkuriC/HexJSNeo/issues"
+  },
+  "license": "MIT",
+  "icon": "logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.yukkuric.hexjsneo.fabric.HexJSNeoFabric"
+    ],
+    "client": [
+      "io.yukkuric.hexjsneo.fabric.HexJSNeoFabricClient"
+    ]
+  },
+  "mixins": [
+    "hexjsneo.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": ">=0",
+    "java": ">=17",
+    "hexcasting": ">=0",
+    "hexcasting": ">=0"
+  },
+  "suggests": {}
+}
