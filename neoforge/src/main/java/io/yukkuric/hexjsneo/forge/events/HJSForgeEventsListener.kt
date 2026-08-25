@@ -22,6 +22,16 @@ class HJSForgeEventsListener {
 
     private object ModBus {
         @SubscribeEvent
+        fun OnRegisterAll(e: RegisterEvent) {
+            fun <T : Any> bindReg(
+                key: ResourceKey<Registry<T>>, regFunc: ((ResourceLocation, T) -> Any?) -> Any?
+            ) {
+                if (e.registryKey != key) return
+                regFunc { id, obj -> e.register(key, id) { obj } }
+            }
+            bindReg(HexRegistries.ACTION, ActionRegistryJS::register)
+        }
+        @SubscribeEvent
         fun OnCommonSetup(e: FMLCommonSetupEvent) {
             commonInit()
             commonLateInit()

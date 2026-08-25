@@ -6,6 +6,8 @@
   "client": [
   ],
   "mixins": [
+    "MutableActionRegistryEntry",
+    "MutableCastingImage"
   ],
   "injectors": {
     "defaultRequire": 1

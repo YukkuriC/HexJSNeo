@@ -19,6 +19,8 @@ class HexJSNeoFabric : IAPI(), ModInitializer {
     }
 
     override fun onInitialize() {
+        bindReg(HexActions.REGISTRY, ActionRegistryJS::register)
+
         commonInit()
         var lateInitOnce = false
         ServerLifecycleEvents.SERVER_STARTING.register {
