@@ -14,6 +14,7 @@ import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.api.utils.TreeList
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
+import dev.latvian.mods.rhino.JavaScriptException
 import io.yukkuric.hexjsneo.ext.unwrapKJS
 import io.yukkuric.hexjsneo.mixin.MutableCastingImage
 import net.minecraft.network.chat.Component
@@ -52,7 +53,19 @@ class ActionJS(
         env: CastingEnvironment,
         image: CastingImage,
         continuation: SpellContinuation
-    ) = _operate(env, image, continuation)
+    ): OperationResult {
+        try {
+            return _operate(env, image, continuation)
+        } catch (e: Throwable) {
+            if (e is JavaScriptException) {
+                val inner: Any? = e.value.unwrapKJS()
+                if (inner is Mishap) throw inner
+                if (inner is Throwable) throw MishapCustom("$inner")
+                throw MishapCustom("$inner")
+            }
+            throw MishapCustom("$e")
+        }
+    }
 
     override fun operateInParens(
         env: CastingEnvironment,
