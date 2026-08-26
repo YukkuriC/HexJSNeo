@@ -7,7 +7,7 @@
   ],
   "mixins": [
     "MutableActionRegistryEntry",
-    "MutableCastingImage"
+    "MutableCastingImageImpl"
   ],
   "injectors": {
     "defaultRequire": 1
