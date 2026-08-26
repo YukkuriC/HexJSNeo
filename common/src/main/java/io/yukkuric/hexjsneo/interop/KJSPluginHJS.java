@@ -13,6 +13,7 @@ import io.yukkuric.hexjsneo.casting.*;
 public class KJSPluginHJS implements KubeJSPlugin {
     public void registerBindings(BindingRegistry event) {
         if (event.type().isClient()) return;
+        event.add("TreeList", TreeList.class);
         event.add("HexPattern", HexPattern.class);
         event.add("OperatorSideEffect", OperatorSideEffect.class);
 
@@ -24,17 +25,5 @@ public class KJSPluginHJS implements KubeJSPlugin {
         context.addToScope(HexJS, "Args", ArgsJS.class);
         context.addToScope(HexJS, "ActionRegistryJS", ActionRegistryJS.class);
         event.add("HexJS", HexJS);
-    }
-
-    @Override
-    public void registerTypeWrappers(TypeWrapperRegistry registry) {
-        // TODO, not working at all
-        registry.register(TreeList.class, (Context c, Object raw) -> switch (raw) {
-            case null -> null;
-            case TreeList<?> yup -> yup;
-            case Iterable<?> screwYouKJSWhyWrapNonStandardList -> TreeList.from(screwYouKJSWhyWrapNonStandardList);
-            default ->
-                    throw new KubeRuntimeException("Expected iterable, got %s".formatted(raw)).source(SourceLine.of(c));
-        });
     }
 }

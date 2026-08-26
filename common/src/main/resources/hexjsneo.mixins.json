@@ -6,7 +6,8 @@
   "client": [
   ],
   "mixins": [
-    "MutableActionRegistryEntry",
+    "ForceTreeList",
+    "MutableActionRegistryEntryImpl",
     "MutableCastingImageImpl"
   ],
   "injectors": {

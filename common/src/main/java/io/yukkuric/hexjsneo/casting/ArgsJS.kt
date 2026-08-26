@@ -24,6 +24,8 @@ import net.minecraft.world.phys.Vec3
  * Helpers for handling stack contents
  */
 class ArgsJS(stack: MutableList<Iota>, n: Int, keep: Boolean = false) {
+    constructor(stack: MutableList<Iota>, n: Int) : this(stack, n, false)
+
     companion object {
         lateinit var CTX_LEVEL: ServerLevel
 
