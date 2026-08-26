@@ -15,8 +15,10 @@ import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.api.utils.TreeList
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.rhino.JavaScriptException
+import dev.latvian.mods.rhino.Undefined
+import dev.latvian.mods.rhino.WrappedException
 import io.yukkuric.hexjsneo.ext.unwrapKJS
-import io.yukkuric.hexjsneo.mixin.MutableCastingImage
+import io.yukkuric.hexjsneo.mixin_interface.MutableCastingImage
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
@@ -25,6 +27,9 @@ typealias OperateMethod = OperateMethodRaw<OperationResult>
 typealias OperateParenMethod = OperateParenMethodRaw<ParenthesizedOperationResult>
 typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingImage, SpellContinuation) -> Any
 
+/**
+ * Base for all KubeJS-registered actions
+ */
 class ActionJS(
     opRaw: OperateMethodRaw<*>? = null,
     opInParensRaw: OperateParenMethodRaw<*>? = null
@@ -54,17 +59,8 @@ class ActionJS(
         image: CastingImage,
         continuation: SpellContinuation
     ): OperationResult {
-        try {
-            return _operate(env, image, continuation)
-        } catch (e: Throwable) {
-            if (e is JavaScriptException) {
-                val inner: Any? = e.value.unwrapKJS()
-                if (inner is Mishap) throw inner
-                if (inner is Throwable) throw MishapCustom("$inner")
-                throw MishapCustom("$inner")
-            }
-            throw MishapCustom("$e")
-        }
+        ArgsJS.InjectContext(env)
+        return wrapTry { _operate(env, image, continuation) }
     }
 
     override fun operateInParens(
@@ -72,15 +68,22 @@ class ActionJS(
         image: CastingImage,
         continuation: SpellContinuation,
         thisIota: Iota
-    ) = _operateInParens(env, image, continuation, thisIota)
+    ): ParenthesizedOperationResult {
+        ArgsJS.InjectContext(env)
+        return wrapTry { _operateInParens(env, image, continuation, thisIota) }
+    }
 
     //#region wrappers
-    fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
+    private fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
-            val ret = raw(env, image, continuation)?.unwrapKJS()
+            var ret = raw(env, image, continuation)?.unwrapKJS()
+            env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
 
             // full result: direct return
             if (ret is OperationResult) return@wrapped ret
+
+            // null or undefined = empty list
+            if (ret is Undefined || ret == null) ret = listOf<Iota>()
 
             // list: add stack
             if (ret is List<*> || ret is Array<*>) {
@@ -131,7 +134,7 @@ class ActionJS(
         }
     }
 
-    fun wrapOperateInParens(raw: OperateParenMethodRaw<*>): OperateParenMethodRaw<ParenthesizedOperationResult> {
+    private fun wrapOperateInParens(raw: OperateParenMethodRaw<*>): OperateParenMethodRaw<ParenthesizedOperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota ->
             val ret = raw(env, image, continuation, thisIota)?.unwrapKJS()
 
@@ -163,6 +166,22 @@ class ActionJS(
 
             // else
             throw MishapCustom("Unsupported: $ret")
+        }
+    }
+
+    private fun <T : Any?> wrapTry(action: () -> T): T {
+        try {
+            return action()
+        } catch (e: Throwable) {
+            var e = e
+            if (e is WrappedException) e = e.wrappedException
+            if (e is JavaScriptException) {
+                val inner: Any? = e.value.unwrapKJS()
+                if (inner is Throwable) e = inner
+                else throw MishapCustom("$inner")
+            }
+            if (e is Mishap) throw e
+            throw MishapCustom("$e")
         }
     }
     //#endregion

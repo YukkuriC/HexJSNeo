@@ -6,6 +6,9 @@ import at.petrak.hexcasting.xplat.IXplatAbstractions
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
 import net.minecraft.resources.ResourceLocation
 
+/**
+ * Helper class for registry & hot-reload KJS patterns & actions
+ */
 data class ActionRegistryJS(
     val prototype: HexPattern,
     val id: ResourceLocation,
