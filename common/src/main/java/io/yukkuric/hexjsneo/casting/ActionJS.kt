@@ -6,10 +6,12 @@ import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.eval.OperationResult
 import at.petrak.hexcasting.api.casting.eval.ParenthesizedOperationResult
 import at.petrak.hexcasting.api.casting.eval.ResolvedPatternType
+import at.petrak.hexcasting.api.casting.eval.sideeffects.EvalSound
 import at.petrak.hexcasting.api.casting.eval.sideeffects.OperatorSideEffect
 import at.petrak.hexcasting.api.casting.eval.vm.CastingImage
 import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
 import at.petrak.hexcasting.api.casting.iota.Iota
+import at.petrak.hexcasting.api.casting.iota.NullIota
 import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.api.utils.TreeList
@@ -85,21 +87,31 @@ class ActionJS(
             // null or undefined = empty list
             if (ret is Undefined || ret == null) ret = listOf<Iota>()
 
-            // list: add stack
+            // list: add stack or sideEffect
             if (ret is List<*> || ret is Array<*>) {
                 val stack = image.stack.toMutableList()
+                val sideEffects = listOfNotNull<OperatorSideEffect>(consumeMedia()).toMutableList()
+                var overrideSound: EvalSound? = null
                 val handleSub: (Any?) -> Unit = { subRaw: Any? ->
-                    val sub = subRaw?.unwrapKJS()
-                    if (sub is Iota) stack.add(sub)
-                    else throw MishapCustom("Unsupported Iota: $ret")
+                    when (val sub = subRaw?.unwrapKJS()) {
+                        null, is Undefined -> stack.add(NullIota())
+                        is Iota -> stack.add(sub)
+                        is OperatorSideEffect -> sideEffects.add(sub)
+                        is EvalSound -> {
+                            if (overrideSound != null) throw MishapCustom("Only one override sound allowed")
+                            overrideSound = sub
+                        }
+
+                        else -> throw MishapCustom("Unsupported element: ${sub.javaClass.simpleName} $sub")
+                    }
                 }
                 if (ret is List<*>) ret.forEach(handleSub)
                 if (ret is Array<*>) ret.forEach(handleSub)
                 return@wrapped OperationResult(
                     image.copy(stack = TreeList.from(stack), opsConsumed = image.opsConsumed + 1),
-                    listOfNotNull(consumeMedia()),
+                    sideEffects,
                     continuation,
-                    HexEvalSounds.NORMAL_EXECUTE.get(),
+                    overrideSound ?: HexEvalSounds.NORMAL_EXECUTE.get(),
                 )
             }
 
