@@ -79,7 +79,7 @@ class ActionJS(
     private fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
             var ret = raw(env, image, continuation)?.unwrapKJS()
-            env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
+            // env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
 
             // full result: direct return
             if (ret is OperationResult) return@wrapped ret
