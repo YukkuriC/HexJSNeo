@@ -10,7 +10,17 @@ import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.NativeObject;
 import io.yukkuric.hexjsneo.casting.*;
 
+import java.util.List;
+
 public class KJSPluginHJS implements KubeJSPlugin {
+    private static List<Class<?>> CUSTOM_JS_CLASSES = List.of(
+            ActionJS.class,
+            ActionRegistryJS.class,
+            CastingEnvironmentComponentJS.class,
+
+            ArgsJS.class
+    );
+
     public void registerBindings(BindingRegistry event) {
         if (event.type().isClient()) return;
         event.add("TreeList", TreeList.class);
@@ -20,10 +30,11 @@ public class KJSPluginHJS implements KubeJSPlugin {
         // build HexJS object
         var context = event.context();
         var HexJS = new NativeObject(context.factory);
-        context.addToScope(HexJS, "ActionJS", ActionJS.class);
-        context.addToScope(HexJS, "ArgsJS", ArgsJS.class);
-        context.addToScope(HexJS, "Args", ArgsJS.class);
-        context.addToScope(HexJS, "ActionRegistryJS", ActionRegistryJS.class);
+        for (var cls : CUSTOM_JS_CLASSES) {
+            var name = cls.getSimpleName();
+            context.addToScope(HexJS, name, cls);
+            context.addToScope(HexJS, name.substring(0, name.length() - 2), cls);
+        }
         event.add("HexJS", HexJS);
     }
 }
