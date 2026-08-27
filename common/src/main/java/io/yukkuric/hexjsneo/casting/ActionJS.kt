@@ -19,8 +19,9 @@ import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.rhino.JavaScriptException
 import dev.latvian.mods.rhino.Undefined
 import dev.latvian.mods.rhino.WrappedException
+import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
+import io.yukkuric.hexjsneo.ext.toListIotaKJS
 import io.yukkuric.hexjsneo.ext.unwrapKJS
-import io.yukkuric.hexjsneo.mixin.MutableCastingImage
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
@@ -33,8 +34,7 @@ typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingIm
  * Base for all KubeJS-registered actions
  */
 class ActionJS(
-    opRaw: OperateMethodRaw<*>? = null,
-    opInParensRaw: OperateParenMethodRaw<*>? = null
+    opRaw: OperateMethodRaw<*>? = null, opInParensRaw: OperateParenMethodRaw<*>? = null
 ) : Action {
     companion object {
         val DUMMY_OPERATE: OperateMethod =
@@ -52,66 +52,106 @@ class ActionJS(
                     ResolvedPatternType.ESCAPED
                 )
             }
+        val TODO_IMAGE = CastingImage()
     }
 
     var _operate: OperateMethod = DUMMY_OPERATE
     var _operateInParens: OperateParenMethod = DUMMY_OPERATE_PARENS
     override fun operate(
-        env: CastingEnvironment,
-        image: CastingImage,
-        continuation: SpellContinuation
+        env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation
     ): OperationResult {
         ArgsJS.InjectContext(env)
         return wrapTry { _operate(env, image, continuation) }
     }
 
     override fun operateInParens(
-        env: CastingEnvironment,
-        image: CastingImage,
-        continuation: SpellContinuation,
-        thisIota: Iota
+        env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota
     ): ParenthesizedOperationResult {
         ArgsJS.InjectContext(env)
         return wrapTry { _operateInParens(env, image, continuation, thisIota) }
     }
 
     //#region wrappers
+    lateinit var lazyStack: Lazy<MutableList<Iota>>
+    lateinit var lazyParenList: Lazy<MutableList<CastingImage.ParenthesizedIota>>
+
+    private fun wrapJSReturn(
+        ret: Any?,
+        image: CastingImage,
+        sideEffects: MutableList<OperatorSideEffect>,
+        continuation: SpellContinuation,
+        addIota: (iota: Iota) -> Unit,
+        addParened: ((iota: CastingImage.ParenthesizedIota) -> Unit)? = null,
+    ): OperationResult? {
+        var ret = ret
+        // env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
+
+        // null or undefined = empty list
+        if (ret is Undefined || ret == null) ret = listOf<Iota>()
+
+        // list: add stack or sideEffect
+        if (ret is Array<*>) ret = ret.asIterable()
+        if (ret is Iterable<*>) {
+            var overrideSound: EvalSound? = null
+            var overrideCont: SpellContinuation? = null
+            ret.forEach { subRaw: Any? ->
+                when (val sub = subRaw?.unwrapKJS()) {
+                    null, is Undefined -> addIota(NullIota())
+                    is Iota -> addIota(sub)
+                    is Iterable<*> -> addIota(sub.toListIotaKJS())
+                    is CastingImage.ParenthesizedIota -> (addParened ?: throw sub.asUnsupportedKJS)(sub)
+
+                    is OperatorSideEffect -> sideEffects.add(sub)
+                    is EvalSound -> {
+                        if (overrideSound != null) throw MishapCustom("Only one override sound allowed")
+                        overrideSound = sub
+                    }
+
+                    is SpellContinuation -> {
+                        if (overrideCont != null) throw MishapCustom("Only one override continuation allowed")
+                        overrideCont = sub
+                    }
+
+                    else -> throw sub.asUnsupportedKJS
+                }
+            }
+            return OperationResult(
+                TODO_IMAGE,
+                sideEffects,
+                overrideCont ?: continuation,
+                overrideSound ?: HexEvalSounds.NORMAL_EXECUTE.get(),
+            )
+        }
+
+        // full result: direct return
+        if (ret is OperationResult) return ret
+
+        // mishap: help throw
+        if (ret is Mishap) throw ret
+
+        // else
+        return null
+    }
+
     private fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
-            var ret = raw(env, image, continuation)?.unwrapKJS()
-            // env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
+            lazyStack = lazy { image.stack.toMutableList() }
+            val stack by lazyStack
+            val ret = raw(env, image, continuation).unwrapKJS()
 
-            // full result: direct return
-            if (ret is OperationResult) return@wrapped ret
-
-            // null or undefined = empty list
-            if (ret is Undefined || ret == null) ret = listOf<Iota>()
-
-            // list: add stack or sideEffect
-            if (ret is List<*> || ret is Array<*>) {
-                val stack = image.stack.toMutableList()
-                val sideEffects = listOfNotNull<OperatorSideEffect>(consumeMedia()).toMutableList()
-                var overrideSound: EvalSound? = null
-                val handleSub: (Any?) -> Unit = { subRaw: Any? ->
-                    when (val sub = subRaw?.unwrapKJS()) {
-                        null, is Undefined -> stack.add(NullIota())
-                        is Iota -> stack.add(sub)
-                        is OperatorSideEffect -> sideEffects.add(sub)
-                        is EvalSound -> {
-                            if (overrideSound != null) throw MishapCustom("Only one override sound allowed")
-                            overrideSound = sub
-                        }
-
-                        else -> throw MishapCustom("Unsupported element: ${sub.javaClass.simpleName} $sub")
-                    }
-                }
-                if (ret is List<*>) ret.forEach(handleSub)
-                if (ret is Array<*>) ret.forEach(handleSub)
-                return@wrapped OperationResult(
-                    image.copy(stack = TreeList.from(stack), opsConsumed = image.opsConsumed + 1),
-                    sideEffects,
-                    continuation,
-                    overrideSound ?: HexEvalSounds.NORMAL_EXECUTE.get(),
+            // common returns
+            wrapJSReturn(
+                ret,
+                image,
+                listOfNotNull<OperatorSideEffect>(consumeMedia()).toMutableList(),
+                continuation,
+                { stack.add(it) },
+            )?.let {
+                if (it.newImage === TODO_IMAGE) return@wrapped it.copy(
+                    newImage = image.copy(
+                        stack = if (lazyStack.isInitialized()) TreeList.from(stack)
+                        else image.stack, opsConsumed = image.opsConsumed + 1
+                    )
                 )
             }
 
@@ -122,24 +162,18 @@ class ActionJS(
 
                 val sideEffects = mutableListOf<OperatorSideEffect>()
 
-                if (env.extractMedia(ret.cost, true) > 0)
-                    throw MishapNotEnoughMedia(ret.cost)
-                if (ret.cost > 0)
-                    sideEffects.add(OperatorSideEffect.ConsumeMedia(ret.cost))
+                if (env.extractMedia(ret.cost, true) > 0) throw MishapNotEnoughMedia(ret.cost)
+                if (ret.cost > 0) sideEffects.add(OperatorSideEffect.ConsumeMedia(ret.cost))
 
                 sideEffects.add(OperatorSideEffect.AttemptSpell(ret.effect, hasCastingSound, awardsCastingStat))
 
-                for (spray in ret.particles)
-                    sideEffects.add(OperatorSideEffect.Particles(spray))
+                for (spray in ret.particles) sideEffects.add(OperatorSideEffect.Particles(spray))
 
                 val image2 = image.copy(opsConsumed = image.opsConsumed + ret.opCount, userData = userDataMut)
 
                 val sound = if (hasCastingSound) HexEvalSounds.SPELL else HexEvalSounds.MUTE
                 return@wrapped OperationResult(image2, sideEffects, continuation, sound.get())
             }
-
-            // mishap: help throw
-            if (ret is Mishap) throw ret
 
             // else
             throw MishapCustom("Unsupported: $ret")
@@ -148,40 +182,36 @@ class ActionJS(
 
     private fun wrapOperateInParens(raw: OperateParenMethodRaw<*>): OperateParenMethodRaw<ParenthesizedOperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota ->
-            val ret = raw(env, image, continuation, thisIota)?.unwrapKJS()
+            lazyParenList = lazy { image.parenthesized.toMutableList() }
+            val stack by lazyParenList
+            val ret = raw(env, image, continuation, thisIota).unwrapKJS()
 
-            // full result: direct return
-            if (ret is ParenthesizedOperationResult) return@wrapped ret
-
-            // list: add stack
-            if (ret is List<*> || ret is Array<*>) {
-                val stack = image.parenthesized.toMutableList()
-                val handleSub: (Any?) -> Unit = { subRaw: Any? ->
-                    val sub = subRaw?.unwrapKJS()
-                    if (sub is Iota) stack.add(CastingImage.ParenthesizedIota(sub, false))
-                    else if (sub is CastingImage.ParenthesizedIota) stack.add(sub)
-                    else throw MishapCustom("Unsupported Iota: $ret")
-                }
-                if (ret is List<*>) ret.forEach(handleSub)
-                if (ret is Array<*>) ret.forEach(handleSub)
+            wrapJSReturn(
+                ret,
+                image,
+                mutableListOf(),
+                continuation,
+                { stack.add(CastingImage.ParenthesizedIota(it, false)) },
+            ) { stack.add(it) }?.let {
                 return@wrapped ParenthesizedOperationResult(
-                    image.copy(parenthesized = TreeList.from(stack)),
-                    listOf(),
-                    continuation,
-                    HexEvalSounds.NORMAL_EXECUTE.get(),
-                    ResolvedPatternType.ESCAPED,
+                    newImage = if (it.newImage === TODO_IMAGE) image.copy(
+                        parenthesized = if (lazyParenList.isInitialized()) TreeList.from(
+                            stack
+                        ) else image.parenthesized
+                    ) else it.newImage,
+                    sideEffects = it.sideEffects,
+                    newContinuation = it.newContinuation,
+                    sound = it.sound,
+                    resolutionType = ResolvedPatternType.ESCAPED,
                 )
             }
-
-            // mishap: help throw
-            if (ret is Mishap) throw ret
 
             // else
             throw MishapCustom("Unsupported: $ret")
         }
     }
 
-    private fun <T : Any?> wrapTry(action: () -> T): T {
+    private fun <T> wrapTry(action: () -> T): T {
         try {
             return action()
         } catch (e: Throwable) {
@@ -228,9 +258,9 @@ class ActionJS(
 
     fun setOperateMutableStack(newFun: MutableStackMethod): ActionJS {
         _operate = wrapOperate { env, image, continuation ->
-            val stack = image.stack.toMutableList()
+            val stack = lazyStack.value
             val ret = newFun(stack, env, image, continuation)
-            (image as MutableCastingImage).setStack(TreeList.from(stack))
+            // (image as MutableCastingImage).setStack(TreeList.from(stack))
             ret
         }
         return this
