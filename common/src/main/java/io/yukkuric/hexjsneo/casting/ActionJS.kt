@@ -77,7 +77,6 @@ class ActionJS(
 
     private fun wrapJSReturn(
         ret: Any?,
-        image: CastingImage,
         sideEffects: MutableList<OperatorSideEffect>,
         continuation: SpellContinuation,
         addIota: (iota: Iota) -> Unit,
@@ -142,7 +141,6 @@ class ActionJS(
             // common returns
             wrapJSReturn(
                 ret,
-                image,
                 listOfNotNull<OperatorSideEffect>(consumeMedia()).toMutableList(),
                 continuation,
                 { stack.add(it) },
@@ -188,7 +186,6 @@ class ActionJS(
 
             wrapJSReturn(
                 ret,
-                image,
                 mutableListOf(),
                 continuation,
                 { stack.add(CastingImage.ParenthesizedIota(it, false)) },
