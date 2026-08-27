@@ -19,6 +19,7 @@ import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.rhino.JavaScriptException
 import dev.latvian.mods.rhino.Undefined
 import dev.latvian.mods.rhino.WrappedException
+import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.ext.toListIotaKJS
 import io.yukkuric.hexjsneo.ext.unwrapKJS
@@ -91,8 +92,8 @@ class ActionJS(
         // list: add stack or sideEffect
         if (ret is Array<*>) ret = ret.asIterable()
         if (ret is Iterable<*>) {
-            var overrideSound: EvalSound? = null
-            var overrideCont: SpellContinuation? = null
+            var overrideSound = OverrideHelper<EvalSound>("sound")
+            var overrideCont = OverrideHelper<SpellContinuation>("continuation")
             ret.forEach { subRaw: Any? ->
                 when (val sub = subRaw?.unwrapKJS()) {
                     null, is Undefined -> addIota(NullIota())
@@ -101,15 +102,8 @@ class ActionJS(
                     is CastingImage.ParenthesizedIota -> (addParened ?: throw sub.asUnsupportedKJS)(sub)
 
                     is OperatorSideEffect -> sideEffects.add(sub)
-                    is EvalSound -> {
-                        if (overrideSound != null) throw MishapCustom("Only one override sound allowed")
-                        overrideSound = sub
-                    }
-
-                    is SpellContinuation -> {
-                        if (overrideCont != null) throw MishapCustom("Only one override continuation allowed")
-                        overrideCont = sub
-                    }
+                    is EvalSound -> overrideSound.update(sub)
+                    is SpellContinuation -> overrideCont.update(sub)
 
                     else -> throw sub.asUnsupportedKJS
                 }
@@ -117,8 +111,8 @@ class ActionJS(
             return OperationResult(
                 TODO_IMAGE,
                 sideEffects,
-                overrideCont ?: continuation,
-                overrideSound ?: HexEvalSounds.NORMAL_EXECUTE.get(),
+                overrideCont.get(continuation),
+                overrideSound.get(HexEvalSounds.NORMAL_EXECUTE::get),
             )
         }
 
