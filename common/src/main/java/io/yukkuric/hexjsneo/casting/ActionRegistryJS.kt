@@ -3,8 +3,7 @@ package io.yukkuric.hexjsneo.casting
 import at.petrak.hexcasting.api.casting.ActionRegistryEntry
 import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
-import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntryImpl
-import io.yukkuric.hexjsneo.mixin_interface.MutableActionRegistryEntry
+import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
 import net.minecraft.resources.ResourceLocation
 
 /**

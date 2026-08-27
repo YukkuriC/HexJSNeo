@@ -7,8 +7,8 @@
   ],
   "mixins": [
     "ForceTreeList",
-    "MutableActionRegistryEntryImpl",
-    "MutableCastingImageImpl"
+    "MutableActionRegistryEntry",
+    "MutableCastingImage"
   ],
   "injectors": {
     "defaultRequire": 1

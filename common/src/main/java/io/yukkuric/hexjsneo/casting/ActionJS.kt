@@ -20,7 +20,7 @@ import dev.latvian.mods.rhino.JavaScriptException
 import dev.latvian.mods.rhino.Undefined
 import dev.latvian.mods.rhino.WrappedException
 import io.yukkuric.hexjsneo.ext.unwrapKJS
-import io.yukkuric.hexjsneo.mixin_interface.MutableCastingImage
+import io.yukkuric.hexjsneo.mixin.MutableCastingImage
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
