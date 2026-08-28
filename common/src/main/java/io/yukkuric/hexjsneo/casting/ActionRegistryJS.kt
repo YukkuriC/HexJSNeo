@@ -6,7 +6,6 @@ import at.petrak.hexcasting.xplat.IXplatAbstractions
 import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
-import io.yukkuric.hexjsneo.ext.unwrapKJS
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
 import net.minecraft.resources.ResourceLocation
 

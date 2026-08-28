@@ -93,8 +93,7 @@ class ActionJS(
         if (ret is Iterable<*>) {
             var overrideSound = OverrideHelper<EvalSound>("sound")
             var overrideCont = OverrideHelper<SpellContinuation>("continuation")
-            ret.forEach { subRaw: Any? ->
-                val sub = subRaw?.unwrapKJS()
+            ret.forEach { sub: Any? ->
                 sub.toIotaKJS()?.let(addIota) ?: when (sub) {
                     is CastingImage.ParenthesizedIota -> (addParened ?: sub.asUnsupportedKJS)(sub)
 
@@ -127,7 +126,7 @@ class ActionJS(
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
             lazyStack = lazy { image.stack.toMutableList() }
             val stack by lazyStack
-            val ret = raw(env, image, continuation).unwrapKJS()
+            val ret = raw(env, image, continuation)
 
             // common returns
             wrapJSReturn(
@@ -173,7 +172,7 @@ class ActionJS(
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota ->
             lazyParenList = lazy { image.parenthesized.toMutableList() }
             val stack by lazyParenList
-            val ret = raw(env, image, continuation, thisIota).unwrapKJS()
+            val ret = raw(env, image, continuation, thisIota)
 
             wrapJSReturn(
                 ret,
