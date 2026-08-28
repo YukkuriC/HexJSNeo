@@ -42,10 +42,10 @@ data class ActionRegistryJS(
                 when (it) {
                     is HexPattern -> argPattern.update(it)
                     is ActionJS -> argAction.update(it)
-                    is String -> argId.update(ResourceLocation.tryParse(it) ?: throw it.asUnsupportedKJS)
+                    is String -> argId.update(ResourceLocation.tryParse(it) ?: it.asUnsupportedKJS)
                     is ResourceLocation -> argId.update(it)
                     is Boolean -> argIsGreat.update(it)
-                    else -> throw it.asUnsupportedKJS
+                    else -> it.asUnsupportedKJS
                 }
             }
 

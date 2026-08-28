@@ -11,7 +11,6 @@ import at.petrak.hexcasting.api.casting.eval.sideeffects.OperatorSideEffect
 import at.petrak.hexcasting.api.casting.eval.vm.CastingImage
 import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
 import at.petrak.hexcasting.api.casting.iota.Iota
-import at.petrak.hexcasting.api.casting.iota.NullIota
 import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.api.utils.TreeList
@@ -21,7 +20,7 @@ import dev.latvian.mods.rhino.Undefined
 import dev.latvian.mods.rhino.WrappedException
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
-import io.yukkuric.hexjsneo.ext.toListIotaKJS
+import io.yukkuric.hexjsneo.ext.toIotaKJS
 import io.yukkuric.hexjsneo.ext.unwrapKJS
 import net.minecraft.network.chat.Component
 
@@ -95,17 +94,15 @@ class ActionJS(
             var overrideSound = OverrideHelper<EvalSound>("sound")
             var overrideCont = OverrideHelper<SpellContinuation>("continuation")
             ret.forEach { subRaw: Any? ->
-                when (val sub = subRaw?.unwrapKJS()) {
-                    null, is Undefined -> addIota(NullIota())
-                    is Iota -> addIota(sub)
-                    is Iterable<*> -> addIota(sub.toListIotaKJS())
-                    is CastingImage.ParenthesizedIota -> (addParened ?: throw sub.asUnsupportedKJS)(sub)
+                val sub = subRaw?.unwrapKJS()
+                sub.toIotaKJS()?.let(addIota) ?: when (sub) {
+                    is CastingImage.ParenthesizedIota -> (addParened ?: sub.asUnsupportedKJS)(sub)
 
                     is OperatorSideEffect -> sideEffects.add(sub)
                     is EvalSound -> overrideSound.update(sub)
                     is SpellContinuation -> overrideCont.update(sub)
 
-                    else -> throw sub.asUnsupportedKJS
+                    else -> sub.asUnsupportedKJS
                 }
             }
             return OperationResult(
@@ -168,7 +165,7 @@ class ActionJS(
             }
 
             // else
-            throw MishapCustom("Unsupported: $ret")
+            ret.asUnsupportedKJS
         }
     }
 
@@ -198,7 +195,7 @@ class ActionJS(
             }
 
             // else
-            throw MishapCustom("Unsupported: $ret")
+            ret.asUnsupportedKJS
         }
     }
 

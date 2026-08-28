@@ -1,30 +1,58 @@
 package io.yukkuric.hexjsneo.ext
 
-import at.petrak.hexcasting.api.casting.iota.Iota
-import at.petrak.hexcasting.api.casting.iota.ListIota
-import at.petrak.hexcasting.api.casting.iota.NullIota
-import at.petrak.hexcasting.api.casting.mishaps.Mishap
+import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
+import at.petrak.hexcasting.api.casting.iota.*
+import at.petrak.hexcasting.api.casting.math.HexPattern
 import dev.latvian.mods.rhino.Undefined
 import dev.latvian.mods.rhino.Wrapper
 import io.yukkuric.hexjsneo.casting.MishapCustom
-import java.util.IdentityHashMap
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
+import org.joml.Vector3d
+import org.joml.Vector3f
+import java.util.*
 
 fun Any?.unwrapKJS(): Any? {
     if (this is Wrapper) return this.unwrap()
     return this
 }
 
-val Any?.asUnsupportedKJS: Mishap
-    get() = MishapCustom("Unsupported element: ${this?.javaClass?.simpleName} $this")
+val Any?.asUnsupportedKJS: Nothing
+    get() = throw MishapCustom("Unsupported element: ${this?.javaClass?.simpleName} $this")
 
-fun Iterable<*>.toListIotaKJS(visited: IdentityHashMap<Any?, Any?> = IdentityHashMap()): ListIota = ListIota(map {
-    val unwrap = it.unwrapKJS()
-    if (visited.containsKey(unwrap)) throw MishapCustom("loop ref detected: $unwrap")
-    visited[unwrap] = unwrap
-    when (unwrap) {
-        is Iota -> unwrap
-        null, is Undefined -> NullIota()
-        is Iterable<*> -> unwrap.toListIotaKJS(visited)
-        else -> throw unwrap.asUnsupportedKJS
+fun Any?.toIotaKJSStrict(visited: IdentityHashMap<Any?, Any?>? = null) =
+    toIotaKJS(visited) ?: asUnsupportedKJS
+
+fun Any?.toIotaKJS(visited: IdentityHashMap<Any?, Any?>? = null): Iota? = when (this) {
+    is Iota -> this
+
+    // consts
+    null, is Undefined -> NullIota()
+    is Number -> DoubleIota(toDouble())
+    is Boolean -> BooleanIota(this)
+
+    // objects
+    is Entity -> EntityIota(this)
+    is HexPattern -> PatternIota(this)
+    is SpellContinuation -> ContinuationIota(this)
+
+    // vec3
+    is Vec3 -> Vec3Iota(this)
+    is BlockPos -> Vec3Iota(center)
+    is Vector3d -> Vec3Iota(Vec3(x, y, z))
+    is Vector3f -> Vec3Iota(Vec3(x.toDouble(), y.toDouble(), z.toDouble()))
+
+    // list
+    is Array<*> -> asIterable().toIotaKJS(visited)
+    is Iterable<*> -> {
+        val map = visited ?: IdentityHashMap()
+        if (map.containsKey(this)) throw MishapCustom("loop ref detected: $this")
+        map[this] = this
+        val ret = ListIota(map { it.toIotaKJSStrict(map) })
+        map.remove(this)
+        ret
     }
-})
+
+    else -> null
+}
