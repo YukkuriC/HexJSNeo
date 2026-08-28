@@ -3,7 +3,10 @@ package io.yukkuric.hexjsneo.ext
 import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
 import at.petrak.hexcasting.api.casting.iota.*
 import at.petrak.hexcasting.api.casting.math.HexPattern
+import at.petrak.hexcasting.api.casting.mishaps.Mishap
+import dev.latvian.mods.rhino.JavaScriptException
 import dev.latvian.mods.rhino.Undefined
+import dev.latvian.mods.rhino.WrappedException
 import dev.latvian.mods.rhino.Wrapper
 import io.yukkuric.hexjsneo.casting.MishapCustom
 import net.minecraft.core.BlockPos
@@ -16,6 +19,22 @@ import java.util.*
 fun Any?.unwrapKJS(): Any? {
     if (this is Wrapper) return this.unwrap()
     return this
+}
+
+fun <T> wrapTryKJS(action: () -> T): T {
+    try {
+        return action()
+    } catch (e: Throwable) {
+        var e = e
+        if (e is WrappedException) e = e.wrappedException
+        if (e is JavaScriptException) {
+            val inner: Any? = e.value.unwrapKJS()
+            if (inner is Throwable) e = inner
+            else throw MishapCustom("$inner")
+        }
+        if (e is Mishap) throw e
+        throw MishapCustom("$e")
+    }
 }
 
 val Any?.asUnsupportedKJS: Nothing

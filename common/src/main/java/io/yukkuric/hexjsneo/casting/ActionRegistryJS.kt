@@ -66,11 +66,9 @@ data class ActionRegistryJS(
         IXplatAbstractions.INSTANCE?.actionRegistry?.let { reg ->
             // replace existing registry for hot swap
             if (reg.containsKey(id)) {
-                reg[id].let {
-                    (it as MutableActionRegistryEntry).let { entry ->
-                        entry.setAction(action)
-                        entry.setPrototype(prototype)
-                    }
+                (reg[id] as MutableActionRegistryEntry).let { entry ->
+                    entry.setAction(action)
+                    entry.setPrototype(prototype)
                 }
             }
         }

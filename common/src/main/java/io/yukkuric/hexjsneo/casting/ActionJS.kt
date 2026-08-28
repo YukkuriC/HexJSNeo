@@ -22,6 +22,7 @@ import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.ext.toIotaKJS
 import io.yukkuric.hexjsneo.ext.unwrapKJS
+import io.yukkuric.hexjsneo.ext.wrapTryKJS
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
@@ -61,14 +62,14 @@ class ActionJS(
         env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation
     ): OperationResult {
         ArgsJS.InjectContext(env)
-        return wrapTry { _operate(env, image, continuation) }
+        return wrapTryKJS { _operate(env, image, continuation) }
     }
 
     override fun operateInParens(
         env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota
     ): ParenthesizedOperationResult {
         ArgsJS.InjectContext(env)
-        return wrapTry { _operateInParens(env, image, continuation, thisIota) }
+        return wrapTryKJS { _operateInParens(env, image, continuation, thisIota) }
     }
 
     //#region wrappers
@@ -195,22 +196,6 @@ class ActionJS(
 
             // else
             ret.asUnsupportedKJS
-        }
-    }
-
-    private fun <T> wrapTry(action: () -> T): T {
-        try {
-            return action()
-        } catch (e: Throwable) {
-            var e = e
-            if (e is WrappedException) e = e.wrappedException
-            if (e is JavaScriptException) {
-                val inner: Any? = e.value.unwrapKJS()
-                if (inner is Throwable) e = inner
-                else throw MishapCustom("$inner")
-            }
-            if (e is Mishap) throw e
-            throw MishapCustom("$e")
         }
     }
     //#endregion

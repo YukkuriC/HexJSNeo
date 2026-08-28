@@ -1,12 +1,10 @@
-package io.yukkuric.hexjsneo.interop;
+package io.yukkuric.hexjsneo.kubejs;
 
 import at.petrak.hexcasting.api.casting.eval.sideeffects.OperatorSideEffect;
 import at.petrak.hexcasting.api.casting.math.HexPattern;
 import at.petrak.hexcasting.api.utils.TreeList;
-import dev.latvian.mods.kubejs.error.KubeRuntimeException;
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.script.*;
-import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.NativeObject;
 import io.yukkuric.hexjsneo.casting.*;
 
@@ -16,6 +14,7 @@ public class KJSPluginHJS implements KubeJSPlugin {
     private static List<Class<?>> CUSTOM_JS_CLASSES = List.of(
             ActionJS.class,
             ActionRegistryJS.class,
+            SpecialHandlerJS.class,
             CastingEnvironmentComponentJS.class,
 
             ArgsJS.class

@@ -1,11 +1,12 @@
 package io.yukkuric.hexjsneo.fabric
 
-import at.petrak.hexcasting.common.lib.hex.HexActions
+import at.petrak.hexcasting.xplat.IXplatAbstractions
 import io.yukkuric.hexjsneo.HexJSNeo.IAPI
 import io.yukkuric.hexjsneo.HexJSNeo.commonInit
 import io.yukkuric.hexjsneo.HexJSNeo.commonLateInit
 import io.yukkuric.hexjsneo.HexJSNeoClient
 import io.yukkuric.hexjsneo.casting.ActionRegistryJS
+import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -19,7 +20,10 @@ class HexJSNeoFabric : IAPI(), ModInitializer {
     }
 
     override fun onInitialize() {
-        bindReg(HexActions.REGISTRY, ActionRegistryJS::register)
+        IXplatAbstractions.INSTANCE?.let {
+            bindReg(it.actionRegistry, ActionRegistryJS::register)
+            bindReg(it.specialHandlerRegistry, SpecialHandlerJS::register)
+        }
 
         commonInit()
         var lateInitOnce = false

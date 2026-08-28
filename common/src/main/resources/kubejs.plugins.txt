@@ -1,1 +1,1 @@
-io.yukkuric.hexjsneo.interop.KJSPluginHJS
+io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
