@@ -1,17 +1,18 @@
 package io.yukkuric.hexjsneo.casting
 
 import at.petrak.hexcasting.api.casting.ActionRegistryEntry
+import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.math.HexPattern
+import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.xplat.IXplatAbstractions
+import dev.latvian.mods.kubejs.typings.Info
 import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
 import net.minecraft.resources.ResourceLocation
 
-/**
- * Helper class for registry & hot-reload KJS patterns & actions
- */
+@Info("Helper class for registry & hot-reload KJS patterns & actions")
 data class ActionRegistryJS(
     val prototype: HexPattern,
     val id: ResourceLocation,
@@ -27,9 +28,7 @@ data class ActionRegistryJS(
             for (pair in HOLDER.entries) regFunc(pair.key, pair.value.asEntry)
         }
 
-        /**
-         * convenient helper for weak-typed constructor
-         */
+        @Info("convenient helper for weak-typed constructor")
         @JvmStatic
         fun of(vararg args: Any?): ActionRegistryJS {
             val argPattern = OverrideHelper<HexPattern>("pattern")
@@ -77,19 +76,29 @@ data class ActionRegistryJS(
     val asEntry by lazy { ActionRegistryEntry(prototype, action) }
 
     //#region KJS transparent handlers
+    @Info("KJS-ish operate method setter")
     fun setOperate(newFun: OperateMethodRaw<*>): ActionRegistryJS {
         action.setOperate(newFun)
         return this
     }
 
+    @Info("KJS-ish paren operate method setter")
     fun setOperateInParens(newFun: OperateParenMethodRaw<*>): ActionRegistryJS {
         action.setOperateInParens(newFun)
         return this
     }
 
+    @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
     fun setOperateMutableStack(newFun: MutableStackMethod): ActionRegistryJS {
         action.setOperateMutableStack(newFun)
         return this
     }
+
+    // @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
+    val mediaCost by action::mediaCost
+    @Info("mishaps if CastEnv can't afford the amount")
+    fun preCheckMedia(env: CastingEnvironment, cost: Long) = action.preCheckMedia(env, cost)
+    @Info("mishaps if CastEnv can't afford current set mediaCost")
+    fun preCheckMedia(env: CastingEnvironment) = action.preCheckMedia(env)
     //#endregion
 }

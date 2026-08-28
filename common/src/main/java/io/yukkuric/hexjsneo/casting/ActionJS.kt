@@ -15,13 +15,11 @@ import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.api.utils.TreeList
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
-import dev.latvian.mods.rhino.JavaScriptException
+import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
-import dev.latvian.mods.rhino.WrappedException
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.ext.toIotaKJS
-import io.yukkuric.hexjsneo.ext.unwrapKJS
 import io.yukkuric.hexjsneo.ext.wrapTryKJS
 import net.minecraft.network.chat.Component
 
@@ -31,18 +29,18 @@ typealias OperateMethod = OperateMethodRaw<OperationResult>
 typealias OperateParenMethod = OperateParenMethodRaw<ParenthesizedOperationResult>
 typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingImage, SpellContinuation) -> Any
 
-/**
- * Base for all KubeJS-registered actions
- */
+@Info("Base for all KubeJS-registered actions")
 class ActionJS(
     opRaw: OperateMethodRaw<*>? = null, opInParensRaw: OperateParenMethodRaw<*>? = null
 ) : Action {
     companion object {
+        @Info("default operate: do nothing")
         val DUMMY_OPERATE: OperateMethod =
             { env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
                 env.castingEntity?.sendSystemMessage(Component.literal("hello hexjs"))
                 OperationResult(image, listOf(), continuation, HexEvalSounds.NORMAL_EXECUTE.get())
             }
+        @Info("default paren operate: do nothing but adding self pattern")
         val DUMMY_OPERATE_PARENS: OperateParenMethod =
             { env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota ->
                 ParenthesizedOperationResult(
@@ -202,8 +200,16 @@ class ActionJS(
 
     //#region
     // ConstMediaAction
+    @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     var mediaCost: Long = 0
+    @Info("returns a ConsumeMedia side-effect if mediaCost > 0")
     fun consumeMedia() = if (mediaCost > 0) OperatorSideEffect.ConsumeMedia(mediaCost) else null
+    @Info("mishaps if CastEnv can't afford the amount")
+    fun preCheckMedia(env: CastingEnvironment, cost: Long) {
+        if (env.extractMedia(cost, true) > 0) throw MishapNotEnoughMedia(cost)
+    }
+    @Info("mishaps if CastEnv can't afford current set mediaCost")
+    fun preCheckMedia(env: CastingEnvironment) = preCheckMedia(env, mediaCost)
     // SpellAction
     var hasCastingSound = true
     var awardsCastingStat = true
@@ -218,16 +224,19 @@ class ActionJS(
     constructor() : this(null, null)
     constructor(opRaw: OperateMethodRaw<Any>) : this(opRaw, null)
 
+    @Info("KJS-ish operate method setter")
     fun setOperate(newFun: OperateMethodRaw<*>): ActionJS {
         _operate = wrapOperate(newFun)
         return this
     }
 
+    @Info("KJS-ish paren operate method setter")
     fun setOperateInParens(newFun: OperateParenMethodRaw<*>): ActionJS {
         _operateInParens = wrapOperateInParens(newFun)
         return this
     }
 
+    @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
     fun setOperateMutableStack(newFun: MutableStackMethod): ActionJS {
         _operate = wrapOperate { env, image, continuation ->
             val stack = lazyStack.value

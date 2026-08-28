@@ -5,6 +5,7 @@ import at.petrak.hexcasting.api.casting.castables.SpecialHandler
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
+import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
 import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
@@ -12,9 +13,7 @@ import io.yukkuric.hexjsneo.ext.wrapTryKJS
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
-/**
- * KJS special handler all in one: registry and logics
- */
+@Info("KJS special handler all in one: registry and logics")
 class SpecialHandlerJS(val id: ResourceLocation, var handler: (HexPattern, CastingEnvironment) -> Any?) :
     SpecialHandler.Factory<SpecialHandler> {
     override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = wrapTryKJS {
@@ -25,13 +24,13 @@ class SpecialHandlerJS(val id: ResourceLocation, var handler: (HexPattern, Casti
         }
     }
 
-    /** KJS-ish chain setter */
+    @Info("KJS-ish chain setter for `tryMatch`")
     fun setTryMatch(func: (HexPattern, CastingEnvironment) -> Any?) {
         handler = func
     }
 
     companion object {
-        /** helper for building `tryMatch` returns */
+        @Info("helper for building `tryMatch` returns")
         @JvmStatic
         fun create(action: Action, name: Component) = Holder(action, name)
 

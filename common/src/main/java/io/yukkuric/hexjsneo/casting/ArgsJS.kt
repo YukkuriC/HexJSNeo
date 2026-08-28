@@ -1,28 +1,17 @@
 // 生成于 GLM-5.3
 package io.yukkuric.hexjsneo.casting
 
+import at.petrak.hexcasting.api.casting.*
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
-import at.petrak.hexcasting.api.casting.getBool
-import at.petrak.hexcasting.api.casting.getDouble
-import at.petrak.hexcasting.api.casting.getEntity
-import at.petrak.hexcasting.api.casting.getList
-import at.petrak.hexcasting.api.casting.getPattern
-import at.petrak.hexcasting.api.casting.getVec3
 import at.petrak.hexcasting.api.casting.iota.Iota
-import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.api.casting.mishaps.MishapInvalidIota
 import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughArgs
-import at.petrak.hexcasting.api.utils.TreeList
+import dev.latvian.mods.kubejs.typings.Info
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.npc.AbstractVillager
 import net.minecraft.world.entity.npc.Villager
-import net.minecraft.world.entity.raid.Raider
-import net.minecraft.world.phys.Vec3
 
-/**
- * Helpers for handling stack contents
- */
+@Info("Helpers for handling stack contents")
 class ArgsJS(stack: MutableList<Iota>, n: Int, keep: Boolean = false) {
     constructor(stack: MutableList<Iota>, n: Int) : this(stack, n, false)
 
