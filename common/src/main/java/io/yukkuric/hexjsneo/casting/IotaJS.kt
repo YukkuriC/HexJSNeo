@@ -1,10 +1,22 @@
 package io.yukkuric.hexjsneo.casting
 
+import at.petrak.hexcasting.api.casting.eval.CastResult
+import at.petrak.hexcasting.api.casting.eval.ResolvedPatternType
+import at.petrak.hexcasting.api.casting.eval.sideeffects.OperatorSideEffect.DoMishap
+import at.petrak.hexcasting.api.casting.eval.vm.CastingVM
+import at.petrak.hexcasting.api.casting.eval.vm.FrameEvaluate
+import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
 import at.petrak.hexcasting.api.casting.iota.Iota
 import at.petrak.hexcasting.api.casting.iota.IotaType
+import at.petrak.hexcasting.api.casting.math.HexDir
+import at.petrak.hexcasting.api.casting.math.HexPattern
+import at.petrak.hexcasting.api.casting.mishaps.Mishap
+import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import com.google.common.base.Supplier
+import dev.latvian.mods.kubejs.typings.Info
 import io.yukkuric.hexjsneo.ext.PipeSelf
+import io.yukkuric.hexjsneo.ext.wrapTryKJS
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.chat.Component
@@ -28,7 +40,7 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
         }
         val DUMMY_DISPLAY = { self: IotaJS -> Component.literal("[${self.typeJS.id} ${self.data}]") }
         val DUMMY_HASHCODE = { self: IotaJS -> self.data.hashCode() }
-        val DUMMY_SIZE = { _: IotaJS -> 1 }
+        val DUMMY_SIZE_DEPTH = { _: IotaJS -> 1 }
 
         // iota type dummy
         val DUMMY_VALIDATE = { _: IotaJS, _: ServerLevel -> true }
@@ -41,24 +53,78 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
     override fun display() = typeJS.handlerDisplay(this)
     override fun hashCode() = typeJS.handlerHashCode(this)
     override fun size() = typeJS.handlerSize(this)
+    override fun depth() = typeJS.handlerDepth(this)
+
+    // executable iota
+    override fun execute(vm: CastingVM, world: ServerLevel, continuation: SpellContinuation) =
+        if (typeJS.customExecute) typeJS.handleExecute(this, vm, world, continuation)
+        else super.execute(vm, world, continuation)
+
+    override fun executeInParens(vm: CastingVM, world: ServerLevel, continuation: SpellContinuation) =
+        if (typeJS.customExecuteInParens) typeJS.handleExecuteInParens(this, vm, world, continuation)
+        else super.executeInParens(vm, world, continuation)
+
+    override fun executable() = typeJS.customExecute || typeJS.customExecuteInParens
 
     /*
-    override fun depth() = TODO()
-    override fun execute(vm: CastingVM, world: ServerLevel, continuation: SpellContinuation) = TODO()
-    override fun executeInParens(vm: CastingVM, world: ServerLevel, continuation: SpellContinuation) = TODO()
-    override fun executable() = TODO()
     override fun subIotas() = TODO()
     */
 
     class Type(val id: ResourceLocation) : IotaType<IotaJS>(), Supplier<IotaType<out Iota?>?>, PipeSelf<Type> {
         override fun get() = this
 
+        //#region executable iota
+        private var delegateAction = ActionJS()
+        var customExecute = false
+        var customExecuteInParens = false
+
+        internal fun handleExecute(
+            self: IotaJS, vm: CastingVM, world: ServerLevel, continuation: SpellContinuation
+        ): CastResult {
+            return try {
+                val resolvedType = ResolvedPatternType.EVALUATED
+                val mid = delegateAction.operate(vm.env, vm.image, continuation)
+                CastResult(self, mid.newContinuation, mid.newImage, mid.sideEffects, resolvedType, mid.sound)
+            } catch (mishap: Mishap) {
+                generalExecuteFail(mishap, self, vm, continuation)
+            }
+        }
+
+        internal fun handleExecuteInParens(
+            self: IotaJS, vm: CastingVM, world: ServerLevel, continuation: SpellContinuation
+        ): CastResult {
+            return try {
+                val mid = delegateAction.operateInParens(vm.env, vm.image, continuation, self)
+                CastResult(self, mid.newContinuation, mid.newImage, mid.sideEffects, mid.resolutionType, mid.sound)
+            } catch (mishap: Mishap) {
+                generalExecuteFail(mishap, self, vm, continuation)
+            }
+        }
+
+        private fun generalExecuteFail(
+            mishap: Mishap, self: IotaJS, vm: CastingVM, continuation: SpellContinuation
+        ): CastResult {
+            // from https://github.com/FallingColors/HexMod/blob/main/Common/src/main/java/at/petrak/hexcasting/api/casting/iota/PatternIota.java
+            val wipeParens =
+                ((continuation as? SpellContinuation.NotDone)?.frame as? FrameEvaluate)?.isMetacasting ?: false
+            return CastResult(
+                self,
+                continuation,
+                if (wipeParens) vm.image.withResetEscape() else null,
+                listOf(DoMishap(mishap, Mishap.Context(HexPattern(HexDir.WEST, mutableListOf()), null))),
+                mishap.resolutionType(vm.env),
+                HexEvalSounds.MISHAP.get()
+            )
+        }
+        //#endregion
+
         // iota handlers
         var handlerTruthy = DUMMY_TRUTHY
         var handlerTolerate = DUMMY_TOLERATE
         var handlerDisplay: (IotaJS) -> Component = DUMMY_DISPLAY
         var handlerHashCode = DUMMY_HASHCODE
-        var handlerSize = DUMMY_SIZE
+        var handlerSize = DUMMY_SIZE_DEPTH
+        var handlerDepth = DUMMY_SIZE_DEPTH
         // type handlers
         var handlerColor = DUMMY_COLOR
         var handlerValidate = DUMMY_VALIDATE
@@ -76,9 +142,14 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
                         it.handlerDisplay = handlerDisplay
                         it.handlerHashCode = handlerHashCode
                         it.handlerSize = handlerSize
+                        it.handlerDepth = handlerDepth
                         it.handlerColor = handlerColor
                         it.handlerValidate = handlerValidate
                         it.handlerListCommas = handlerListCommas
+
+                        it.customExecute = customExecute
+                        it.customExecuteInParens = customExecuteInParens
+                        it.delegateAction = delegateAction
                     }
                 }
             }
@@ -97,7 +168,21 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
         override fun validate(iota: IotaJS, level: ServerLevel) = handlerValidate(iota, level)
         override fun usesListCommas() = handlerListCommas()
 
-        //#region KJS interface
+        //#region KJS interface executable
+        @Info("KJS-ish operate method setter")
+        fun setOperate(newFun: OperateMethodRaw<*>?) = modify {
+            customExecute = newFun != null
+            delegateAction.setOperate(newFun ?: ActionJS.DUMMY_OPERATE)
+        }
+
+        @Info("KJS-ish paren operate method setter")
+        fun setOperateInParens(newFun: OperateParenMethodRaw<*>?) = modify {
+            customExecuteInParens = newFun != null
+            delegateAction.setOperateInParens(newFun ?: ActionJS.DUMMY_OPERATE_PARENS)
+        }
+        //#endregion
+
+        //#region KJS interface simple
         fun setTruthy(handler: (IotaJS) -> Boolean) = modify { handlerTruthy = handler }
         fun setTruthy(value: Boolean) = modify { handlerTruthy = { value } }
 
@@ -111,6 +196,9 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
 
         fun setSize(handler: (IotaJS) -> Int) = modify { handlerSize = handler }
         fun setSize(value: Int) = modify { handlerSize = { value } }
+
+        fun setDepth(handler: (IotaJS) -> Int) = modify { handlerDepth = handler }
+        fun setDepth(value: Int) = modify { handlerDepth = { value } }
 
         fun setColor(handler: () -> Int) = modify { handlerColor = handler }
         fun setColor(value: Int) = modify { handlerColor = { value } }

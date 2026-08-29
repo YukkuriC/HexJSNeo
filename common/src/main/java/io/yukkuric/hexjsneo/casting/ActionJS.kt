@@ -84,8 +84,8 @@ class ActionJS(
         // list: add stack or sideEffect
         if (ret is Array<*>) ret = ret.asIterable()
         if (ret is Iterable<*>) {
-            var overrideSound = OverrideHelper<EvalSound>("sound")
-            var overrideCont = OverrideHelper<SpellContinuation>("continuation")
+            val overrideSound = OverrideHelper<EvalSound>("sound")
+            val overrideCont = OverrideHelper<SpellContinuation>("continuation")
             ret.forEach { sub: Any? ->
                 sub.toIotaKJS()?.let(addIota) ?: when (sub) {
                     is CastingImage.ParenthesizedIota -> (addParened ?: sub.asUnsupportedKJS)(sub)
@@ -188,7 +188,7 @@ class ActionJS(
 
     //#region KJS extra hooks
     constructor() : this(null, null)
-    constructor(opRaw: OperateMethodRaw<Any>) : this(opRaw, null)
+    constructor(opRaw: OperateMethodRaw<*>) : this(opRaw, null)
 
     @Info("KJS-ish operate method setter")
     fun setOperate(newFun: OperateMethodRaw<*>) = modify { _operate = wrapOperate(newFun) }

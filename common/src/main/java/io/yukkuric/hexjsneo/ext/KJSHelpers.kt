@@ -21,7 +21,7 @@ fun Any?.unwrapKJS(): Any? {
     return this
 }
 
-fun <T> wrapTryKJS(action: () -> T): T {
+inline fun <T> wrapTryKJS(action: () -> T): T {
     try {
         return action()
     } catch (e: Throwable) {
