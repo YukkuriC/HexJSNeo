@@ -72,7 +72,7 @@ subprojects {
         // interop dep
         modImplementation "curse.maven:hexparse-1148731:7676910"
         modImplementation "curse.maven:hexoverpowered-1173074:7733501"
-        ["kubejs-238086:8715199", "rhino-416294:8463898"]
+        ["kubejs-238086:8715199", "rhino-416294:8463898", "probejs-585406:8304356"]
                 .forEach { modImplementation("curse.maven:$it") }
         // helpers in runClient
         // modImplementation "curse.maven:jade-324717:6855440"

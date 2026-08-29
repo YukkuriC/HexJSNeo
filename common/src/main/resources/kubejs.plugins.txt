@@ -1,1 +1,2 @@
 io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
+io.yukkuric.hexjsneo.kubejs.probe.PJSPluginHJS probejs
