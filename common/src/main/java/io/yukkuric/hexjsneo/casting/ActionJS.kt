@@ -17,6 +17,7 @@ import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
 import io.yukkuric.hexjsneo.ext.*
+import io.yukkuric.hexjsneo.mixin_interface.LazyCastingImage
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
@@ -67,9 +68,6 @@ class ActionJS(
     }
 
     //#region wrappers
-    lateinit var lazyStack: Lazy<MutableList<Iota>>
-    lateinit var lazyParenList: Lazy<MutableList<CastingImage.ParenthesizedIota>>
-
     private fun wrapJSReturn(
         ret: Any?,
         sideEffects: MutableList<OperatorSideEffect>,
@@ -119,7 +117,7 @@ class ActionJS(
 
     private fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
-            lazyStack = lazy { image.stack.toMutableList() }
+            val lazyStack = (image as LazyCastingImage).getLazyStack(true)
             val stack by lazyStack
             val ret = raw(env, image, continuation)
 
@@ -143,7 +141,7 @@ class ActionJS(
 
     private fun wrapOperateInParens(raw: OperateParenMethodRaw<*>): OperateParenMethodRaw<ParenthesizedOperationResult> {
         return wrapped@{ env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation, thisIota: Iota ->
-            lazyParenList = lazy { image.parenthesized.toMutableList() }
+            val lazyParenList = (image as LazyCastingImage).getLazyParenList(true)
             val stack by lazyParenList
             val ret = raw(env, image, continuation, thisIota)
 
@@ -207,7 +205,7 @@ class ActionJS(
     @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
     fun setOperateMutableStack(newFun: MutableStackMethod): ActionJS {
         _operate = wrapOperate { env, image, continuation ->
-            val stack = lazyStack.value
+            val stack = (image as LazyCastingImage).getLazyStack(false).value
             val ret = newFun(stack, env, image, continuation)
             // (image as MutableCastingImage).setStack(TreeList.from(stack))
             ret
