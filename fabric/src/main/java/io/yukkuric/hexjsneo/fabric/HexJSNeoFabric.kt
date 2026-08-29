@@ -6,6 +6,7 @@ import io.yukkuric.hexjsneo.HexJSNeo.commonInit
 import io.yukkuric.hexjsneo.HexJSNeo.commonLateInit
 import io.yukkuric.hexjsneo.HexJSNeoClient
 import io.yukkuric.hexjsneo.casting.ActionRegistryJS
+import io.yukkuric.hexjsneo.casting.IotaJS
 import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.api.ModInitializer
@@ -23,6 +24,7 @@ class HexJSNeoFabric : IAPI(), ModInitializer {
         IXplatAbstractions.INSTANCE?.let {
             bindReg(it.actionRegistry, ActionRegistryJS::register)
             bindReg(it.specialHandlerRegistry, SpecialHandlerJS::register)
+            bindReg(it.iotaTypeRegistry, IotaJS::register)
         }
 
         commonInit()

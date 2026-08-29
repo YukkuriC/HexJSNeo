@@ -4,6 +4,7 @@ import at.petrak.hexcasting.common.lib.HexRegistries
 import io.yukkuric.hexjsneo.HexJSNeo.commonInit
 import io.yukkuric.hexjsneo.HexJSNeo.commonLateInit
 import io.yukkuric.hexjsneo.casting.ActionRegistryJS
+import io.yukkuric.hexjsneo.casting.IotaJS
 import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
 import io.yukkuric.hexjsneo.forge.DistExecutor
 import io.yukkuric.hexjsneo.forge.HexJSNeoForgeClient
@@ -32,6 +33,7 @@ class HJSForgeEventsListener {
             }
             bindReg(HexRegistries.ACTION, ActionRegistryJS::register)
             bindReg(HexRegistries.SPECIAL_HANDLER, SpecialHandlerJS::register)
+            bindReg(HexRegistries.IOTA_TYPE, IotaJS::register)
         }
         @SubscribeEvent
         fun OnCommonSetup(e: FMLCommonSetupEvent) {
