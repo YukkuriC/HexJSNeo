@@ -1,8 +1,9 @@
 package io.yukkuric.hexjsneo.ext
 
 interface PipeSelf<SELF : PipeSelf<SELF>> {
-    fun modify(action: (self: PipeSelf<SELF>) -> Unit): PipeSelf<SELF> {
-        action(this)
-        return this
+    @Suppress("UNCHECKED_CAST")
+    fun modify(action: (self: SELF) -> Unit) = (this as SELF).let { self ->
+        action(self)
+        self
     }
 }

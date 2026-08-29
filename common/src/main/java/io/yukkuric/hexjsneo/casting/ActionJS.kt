@@ -191,26 +191,19 @@ class ActionJS(
     constructor(opRaw: OperateMethodRaw<Any>) : this(opRaw, null)
 
     @Info("KJS-ish operate method setter")
-    fun setOperate(newFun: OperateMethodRaw<*>): ActionJS {
-        _operate = wrapOperate(newFun)
-        return this
-    }
+    fun setOperate(newFun: OperateMethodRaw<*>) = modify { _operate = wrapOperate(newFun) }
 
     @Info("KJS-ish paren operate method setter")
-    fun setOperateInParens(newFun: OperateParenMethodRaw<*>): ActionJS {
-        _operateInParens = wrapOperateInParens(newFun)
-        return this
-    }
+    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = modify { _operateInParens = wrapOperateInParens(newFun) }
 
     @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
-    fun setOperateMutableStack(newFun: MutableStackMethod): ActionJS {
+    fun setOperateMutableStack(newFun: MutableStackMethod) = modify {
         _operate = wrapOperate { env, image, continuation ->
             val stack = (image as LazyCastingImage).getLazyStack(false).value
             val ret = newFun(stack, env, image, continuation)
             // (image as MutableCastingImage).setStack(TreeList.from(stack))
             ret
         }
-        return this
     }
     //#endregion
 }

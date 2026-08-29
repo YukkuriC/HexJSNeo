@@ -77,22 +77,13 @@ data class ActionRegistryJS(
 
     //#region KJS transparent handlers
     @Info("KJS-ish operate method setter")
-    fun setOperate(newFun: OperateMethodRaw<*>): ActionRegistryJS {
-        action.setOperate(newFun)
-        return this
-    }
+    fun setOperate(newFun: OperateMethodRaw<*>) = modify { action.setOperate(newFun) }
 
     @Info("KJS-ish paren operate method setter")
-    fun setOperateInParens(newFun: OperateParenMethodRaw<*>): ActionRegistryJS {
-        action.setOperateInParens(newFun)
-        return this
-    }
+    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = modify { action.setOperateInParens(newFun) }
 
     @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
-    fun setOperateMutableStack(newFun: MutableStackMethod): ActionRegistryJS {
-        action.setOperateMutableStack(newFun)
-        return this
-    }
+    fun setOperateMutableStack(newFun: MutableStackMethod) = modify { action.setOperateMutableStack(newFun) }
 
     // @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     val mediaCost by action::mediaCost
