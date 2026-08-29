@@ -15,7 +15,7 @@ open class SubClassProvider(classes: Iterable<Class<*>>, f: ContextFactory) : Si
 
     private val CLASS_MAP = HashMap<String, Class<*>>()
     open fun getClassKey(cls: Class<*>) = sequenceOf(cls.simpleName)
-    fun contents() = CLASS_MAP.entries
+    fun contents() = CLASS_MAP.entries.sortedBy { it.key }
 
     init {
         for (cls in classes) {
