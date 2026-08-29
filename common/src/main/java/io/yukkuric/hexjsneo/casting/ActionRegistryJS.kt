@@ -3,10 +3,10 @@ package io.yukkuric.hexjsneo.casting
 import at.petrak.hexcasting.api.casting.ActionRegistryEntry
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.math.HexPattern
-import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughMedia
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import io.yukkuric.hexjsneo.HexJSNeo
+import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
@@ -18,7 +18,7 @@ data class ActionRegistryJS(
     val id: ResourceLocation,
     val action: ActionJS,
     val isGreat: Boolean
-) {
+) : PipeSelf<ActionRegistryJS> {
     companion object {
         val HOLDER = HashMap<ResourceLocation, ActionRegistryJS>()
         val MAP_NORMAL = HashMap<String, ActionRegistryJS>()

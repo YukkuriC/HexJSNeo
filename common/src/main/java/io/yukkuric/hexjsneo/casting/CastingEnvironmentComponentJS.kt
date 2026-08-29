@@ -3,10 +3,12 @@ package io.yukkuric.hexjsneo.casting
 import at.petrak.hexcasting.api.casting.eval.CastResult
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironmentComponent
 import at.petrak.hexcasting.api.casting.eval.vm.CastingImage
+import io.yukkuric.hexjsneo.ext.PipeSelf
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
-open class CastingEnvironmentComponentJS(initKey: String) : CastingEnvironmentComponent {
+open class CastingEnvironmentComponentJS(initKey: String) : CastingEnvironmentComponent,
+    PipeSelf<CastingEnvironmentComponentJS> {
     private var _key: CastingEnvironmentComponent.Key<*> = Key.of(initKey)
     override fun getKey() = _key
     fun setKey(key: String): Any {
@@ -53,11 +55,8 @@ open class CastingEnvironmentComponentJS(initKey: String) : CastingEnvironmentCo
     }
 
     class HasEditPermissionsAt(
-        initKey: String,
-        var funEditPermissionsAt: (pos: BlockPos, oldResult: Boolean) -> Boolean
-    ) :
-        CastingEnvironmentComponentJS(initKey),
-        CastingEnvironmentComponent.HasEditPermissionsAt {
+        initKey: String, var funEditPermissionsAt: (pos: BlockPos, oldResult: Boolean) -> Boolean
+    ) : CastingEnvironmentComponentJS(initKey), CastingEnvironmentComponent.HasEditPermissionsAt {
         override fun onHasEditPermissionsAt(pos: BlockPos, oldResult: Boolean) = funEditPermissionsAt(pos, oldResult)
     }
 }

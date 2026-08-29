@@ -1,7 +1,6 @@
 package io.yukkuric.hexjsneo.casting
 
 import at.petrak.hexcasting.api.casting.castables.Action
-import at.petrak.hexcasting.api.casting.castables.SpellAction
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.eval.OperationResult
 import at.petrak.hexcasting.api.casting.eval.ParenthesizedOperationResult
@@ -17,10 +16,7 @@ import at.petrak.hexcasting.api.utils.TreeList
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
-import io.yukkuric.hexjsneo.ext.OverrideHelper
-import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
-import io.yukkuric.hexjsneo.ext.toIotaKJS
-import io.yukkuric.hexjsneo.ext.wrapTryKJS
+import io.yukkuric.hexjsneo.ext.*
 import net.minecraft.network.chat.Component
 
 typealias OperateMethodRaw<R> = (CastingEnvironment, CastingImage, SpellContinuation) -> R
@@ -32,7 +28,7 @@ typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingIm
 @Info("Base for all KubeJS-registered actions")
 class ActionJS(
     opRaw: OperateMethodRaw<*>? = null, opInParensRaw: OperateParenMethodRaw<*>? = null
-) : Action {
+) : Action, PipeSelf<ActionJS> {
     companion object {
         @Info("default operate: do nothing")
         val DUMMY_OPERATE: OperateMethod =

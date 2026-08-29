@@ -8,6 +8,7 @@ import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
 import io.yukkuric.hexjsneo.HexJSNeo
+import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.ext.wrapTryKJS
 import net.minecraft.network.chat.Component
@@ -15,7 +16,7 @@ import net.minecraft.resources.ResourceLocation
 
 @Info("KJS special handler all in one: registry and logics")
 class SpecialHandlerJS(val id: ResourceLocation, var handler: (HexPattern, CastingEnvironment) -> Any?) :
-    SpecialHandler.Factory<SpecialHandler> {
+    SpecialHandler.Factory<SpecialHandler>, PipeSelf<SpecialHandlerJS> {
     override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = wrapTryKJS {
         when (val ret = handler(pattern, env)) {
             null, is Undefined -> null
