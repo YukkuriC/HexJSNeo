@@ -9,6 +9,4 @@ class HexJS(classes: Iterable<Class<*>>, f: ContextFactory) : SubClassProvider(c
     override fun getClassKey(cls: Class<*>) = cls.simpleName.let {
         sequenceOf(it, it.substring(0, it.length - 2))
     }
-
-    val test = ActionJS()
 }
