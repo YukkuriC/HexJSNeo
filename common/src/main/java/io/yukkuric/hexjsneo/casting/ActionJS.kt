@@ -80,7 +80,7 @@ class ActionJS(
         continuation: SpellContinuation,
         addIota: (iota: Iota) -> Unit,
         addParened: ((iota: CastingImage.ParenthesizedIota) -> Unit)? = null,
-    ): OperationResult? {
+    ): OperationResult {
         var ret = ret
         // env.castingEntity?.sendSystemMessage(Component.literal("$ret is class ${ret?.javaClass?.simpleName}"))
 
@@ -118,7 +118,7 @@ class ActionJS(
         if (ret is Mishap) throw ret
 
         // else
-        return null
+        ret.asUnsupportedKJS
     }
 
     private fun wrapOperate(raw: OperateMethodRaw<*>): OperateMethodRaw<OperationResult> {
@@ -133,37 +133,15 @@ class ActionJS(
                 listOfNotNull<OperatorSideEffect>(consumeMedia()).toMutableList(),
                 continuation,
                 { stack.add(it) },
-            )?.let {
+            ).let {
                 if (it.newImage === TODO_IMAGE) return@wrapped it.copy(
                     newImage = image.copy(
                         stack = if (lazyStack.isInitialized()) TreeList.from(stack)
                         else image.stack, opsConsumed = image.opsConsumed + 1
                     )
                 )
+                return@wrapped it
             }
-
-            // spell: SpellAction
-            if (ret is SpellAction.Result) {
-                // from https://github.com/FallingColors/HexMod/blob/main/Common/src/main/java/at/petrak/hexcasting/api/casting/castables/SpellAction.kt
-                val userDataMut = image.userData.copy()
-
-                val sideEffects = mutableListOf<OperatorSideEffect>()
-
-                if (env.extractMedia(ret.cost, true) > 0) throw MishapNotEnoughMedia(ret.cost)
-                if (ret.cost > 0) sideEffects.add(OperatorSideEffect.ConsumeMedia(ret.cost))
-
-                sideEffects.add(OperatorSideEffect.AttemptSpell(ret.effect, hasCastingSound, awardsCastingStat))
-
-                for (spray in ret.particles) sideEffects.add(OperatorSideEffect.Particles(spray))
-
-                val image2 = image.copy(opsConsumed = image.opsConsumed + ret.opCount, userData = userDataMut)
-
-                val sound = if (hasCastingSound) HexEvalSounds.SPELL else HexEvalSounds.MUTE
-                return@wrapped OperationResult(image2, sideEffects, continuation, sound.get())
-            }
-
-            // else
-            ret.asUnsupportedKJS
         }
     }
 
@@ -178,7 +156,7 @@ class ActionJS(
                 mutableListOf(),
                 continuation,
                 { stack.add(CastingImage.ParenthesizedIota(it, false)) },
-            ) { stack.add(it) }?.let {
+            ) { stack.add(it) }.let {
                 return@wrapped ParenthesizedOperationResult(
                     newImage = if (it.newImage === TODO_IMAGE) image.copy(
                         parenthesized = if (lazyParenList.isInitialized()) TreeList.from(
@@ -191,9 +169,6 @@ class ActionJS(
                     resolutionType = ResolvedPatternType.ESCAPED,
                 )
             }
-
-            // else
-            ret.asUnsupportedKJS
         }
     }
     //#endregion
@@ -210,9 +185,6 @@ class ActionJS(
     }
     @Info("mishaps if CastEnv can't afford current set mediaCost")
     fun preCheckMedia(env: CastingEnvironment) = preCheckMedia(env, mediaCost)
-    // SpellAction
-    var hasCastingSound = true
-    var awardsCastingStat = true
     //#endregion
 
     init {
