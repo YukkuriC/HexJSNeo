@@ -1,5 +1,6 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
+import io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
 import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
 import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
@@ -7,6 +8,7 @@ import moe.wolfgirl.probejs.typescript.Documents
 import moe.wolfgirl.probejs.typescript.document.Types
 import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
 import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
+import kotlin.sequences.toSet
 
 class PJSPluginHJS : ProbeJSPlugin() {
     override fun transformClass(document: Documents.ClassDocument) {
@@ -39,4 +41,8 @@ class PJSPluginHJS : ProbeJSPlugin() {
             classDocument.members.add(field)
         }
     }
+
+    override fun provideClassForDiscovery() = sequence {
+        yieldAll(SubClassProvider.LOADED_CLASSES)
+    }.toSet()
 }

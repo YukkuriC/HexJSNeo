@@ -6,6 +6,10 @@ import dev.latvian.mods.rhino.NativeJavaClass
 import dev.latvian.mods.rhino.Scriptable
 
 open class SubClassProvider(classes: Iterable<Class<*>>, f: ContextFactory) : SingletonClassTracker(f) {
+    companion object {
+        val LOADED_CLASSES = HashSet<Class<*>>()
+    }
+
     override fun get(cx: Context, name: String, start: Scriptable): Any? {
         CLASS_MAP[name]?.let {
             return NativeJavaClass(cx, start, it)
@@ -19,6 +23,7 @@ open class SubClassProvider(classes: Iterable<Class<*>>, f: ContextFactory) : Si
 
     init {
         for (cls in classes) {
+            LOADED_CLASSES.add(cls)
             for (key in getClassKey(cls)) {
                 CLASS_MAP[key] = cls
             }

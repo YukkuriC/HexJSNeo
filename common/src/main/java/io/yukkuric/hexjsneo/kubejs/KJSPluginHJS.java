@@ -15,6 +15,7 @@ public class KJSPluginHJS implements KubeJSPlugin {
             ActionJS.class,
             ActionRegistryJS.class,
             SpecialHandlerJS.class,
+            IotaJS.class,
             CastingEnvironmentComponentJS.class,
 
             ArgsJS.class
