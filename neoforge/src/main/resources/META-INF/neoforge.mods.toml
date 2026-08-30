@@ -17,6 +17,8 @@ displayURL = "https://modrinth.com/mod/${modid}"
 
 [[mixins]]
 config = "hexjsneo.mixins.json"
+[[mixins]]
+config = "hexjsneo.mixins.forge.json"
 
 [[dependencies.${modid}]]
 modId = "minecraft"
