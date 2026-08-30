@@ -1,6 +1,7 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
 import io.yukkuric.hexjsneo.kubejs.sub.HexJS
+import io.yukkuric.hexjsneo.kubejs.sub.api.APINested
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
 import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
@@ -28,6 +29,11 @@ class PJSPluginHJS : ProbeJSPlugin() {
 
         // limit range
         if (!targetCls.packageName.startsWith("io.yukkuric.hexjsneo.kubejs.sub")) return
+
+        // API nested special handler
+        if (targetCls == APINested::class.java) {
+            // TODO
+        }
 
         // fetch saved fake singleton
         val obj = SingletonClassTracker.from(targetCls) as? SubClassProvider ?: return

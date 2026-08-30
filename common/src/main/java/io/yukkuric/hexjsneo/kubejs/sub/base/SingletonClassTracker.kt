@@ -1,9 +1,8 @@
 package io.yukkuric.hexjsneo.kubejs.sub.base
 
 import dev.latvian.mods.rhino.ContextFactory
-import dev.latvian.mods.rhino.NativeObject
 
-open class SingletonClassTracker(f: ContextFactory) : NativeObject(f) {
+open class SingletonClassTracker(f: ContextFactory) : HexJSPluginObject(f) {
     companion object {
         val HOLDER = HashMap<Class<*>, SingletonClassTracker>()
 

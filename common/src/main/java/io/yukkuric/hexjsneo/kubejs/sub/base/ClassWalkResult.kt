@@ -13,7 +13,7 @@ class ClassWalkResult(val pathPrefix: String) {
             val cls = Class.forName(path, false, loader)
             if (cls.isAnonymousClass) return null
             path.lastIndexOf('.').let { idx ->
-                val packagePath = path.substring(0, idx).removePrefix(pathPrefix).removeSuffix(".")
+                val packagePath = path.substring(0, idx).removePrefix(pathPrefix).removePrefix(".")
                 val clsName = path.substring(idx + 1)
                 add(cls, packagePath, clsName)
                 return Pair(clsName, cls)

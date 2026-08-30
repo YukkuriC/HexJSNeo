@@ -15,12 +15,9 @@ open class SubClassProvider(
     }
 
 
-    override fun get(cx: Context, name: String, start: Scriptable): Any? {
-        CLASS_MAP[name]?.let {
-            return NativeJavaClass(cx, start, it)
-        }
-        return super.get(cx, name, start)
-    }
+    override fun getCustom(cx: Context, name: String, start: Scriptable) = CLASS_MAP[name]?.let {
+        NativeJavaClass(cx, start, it)
+    } ?: NOT_FOUND
 
     private val CLASS_MAP = HashMap<String, Class<*>>()
     open fun getClassKey(cls: Class<*>) = sequenceOf(cls.simpleName)
