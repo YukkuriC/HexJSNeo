@@ -15,8 +15,10 @@ import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import com.google.common.base.Supplier
 import dev.latvian.mods.kubejs.typings.Info
+import io.yukkuric.hexjsneo.ext.BoxedContent
+import io.yukkuric.hexjsneo.ext.BoxedRegistry
 import io.yukkuric.hexjsneo.ext.PipeSelf
-import io.yukkuric.hexjsneo.ext.wrapTryKJS
+import io.yukkuric.hexjsneo.ext.hotSwap
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.chat.Component
@@ -24,12 +26,30 @@ import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 
-class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
+class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
     companion object {
         val HOLDER = HashMap<ResourceLocation, Type>()
 
         fun register(regFunc: (ResourceLocation, IotaType<*>) -> Any?) {
-            for (pair in HOLDER.entries) regFunc(pair.key, pair.value)
+            for ((key, value) in HOLDER.entries) {
+                val box = BoxedIotaType(value)
+                value.box = box
+                regFunc(key, box)
+            }
+        }
+
+        class BoxedIotaType(override var inner: Type) : IotaType<IotaJS>(),
+            BoxedRegistry<Type, IotaType<IotaJS>, BoxedIotaType> {
+            override fun codec() = inner.codec()
+            override fun streamCodec() = inner.streamCodec()
+            override fun color() = inner.color()
+            override fun validate(iota: IotaJS, level: ServerLevel) = inner.validate(iota, level)
+            override fun usesListCommas() = inner.usesListCommas()
+
+            override fun equals(other: Any?): Boolean {
+                if (other is Type) return this.inner == other
+                return super.equals(other)
+            }
         }
 
         // iota dummy
@@ -47,6 +67,8 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
         val DUMMY_COLOR = { 0x00ffff }
         val DUMMY_COMMA = { true }
     }
+
+    val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
 
     override fun isTruthy() = typeJS.handlerTruthy(this)
     override fun toleratesOther(other: Iota) = typeJS.handlerTolerate(this, other)
@@ -70,8 +92,14 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
     override fun subIotas() = TODO()
     */
 
-    class Type(val id: ResourceLocation) : IotaType<IotaJS>(), Supplier<IotaType<out Iota?>?>, PipeSelf<Type> {
-        override fun get() = this
+    class Type(override val id: ResourceLocation) : IotaType<IotaJS>(), BoxedContent, PipeSelf<Type>,
+        Supplier<IotaType<out Iota?>?> {
+        var box: BoxedIotaType? = null
+        override fun get() = box ?: this
+        override fun equals(other: Any?): Boolean {
+            if (other is BoxedIotaType) return other.inner == this
+            return super.equals(other)
+        }
 
         //#region executable iota
         private var delegateAction = ActionJS()
@@ -133,25 +161,8 @@ class IotaJS(val data: CompoundTag, val typeJS: Type) : Iota(typeJS) {
         //#region registry & codec
         init {
             HOLDER[id] = this
-            // hot swap
-            IXplatAbstractions.INSTANCE?.iotaTypeRegistry?.let { reg ->
-                if (reg.containsKey(id)) {
-                    (reg[id] as? Type)?.let {
-                        it.handlerTruthy = handlerTruthy
-                        it.handlerTolerate = handlerTolerate
-                        it.handlerDisplay = handlerDisplay
-                        it.handlerHashCode = handlerHashCode
-                        it.handlerSize = handlerSize
-                        it.handlerDepth = handlerDepth
-                        it.handlerColor = handlerColor
-                        it.handlerValidate = handlerValidate
-                        it.handlerListCommas = handlerListCommas
-
-                        it.customExecute = customExecute
-                        it.customExecuteInParens = customExecuteInParens
-                        it.delegateAction = delegateAction
-                    }
-                }
+            hotSwap(IXplatAbstractions.INSTANCE?.iotaTypeRegistry) {
+                box = it as BoxedIotaType
             }
         }
 

@@ -7,16 +7,13 @@ import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
-import io.yukkuric.hexjsneo.HexJSNeo
-import io.yukkuric.hexjsneo.ext.PipeSelf
-import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
-import io.yukkuric.hexjsneo.ext.wrapTryKJS
+import io.yukkuric.hexjsneo.ext.*
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
 @Info("KJS special handler all in one: registry and logics")
-class SpecialHandlerJS(val id: ResourceLocation, var handler: (HexPattern, CastingEnvironment) -> Any?) :
-    SpecialHandler.Factory<SpecialHandler>, PipeSelf<SpecialHandlerJS> {
+class SpecialHandlerJS(override val id: ResourceLocation, var handler: (HexPattern, CastingEnvironment) -> Any?) :
+    BoxedContent, SpecialHandler.Factory<SpecialHandler>, PipeSelf<SpecialHandlerJS> {
     override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = wrapTryKJS {
         when (val ret = handler(pattern, env)) {
             null, is Undefined -> null
@@ -35,21 +32,19 @@ class SpecialHandlerJS(val id: ResourceLocation, var handler: (HexPattern, Casti
 
         val HOLDER = HashMap<ResourceLocation, SpecialHandlerJS>()
 
-        fun register(regFunc: (ResourceLocation, SpecialHandlerJS) -> Any?) {
-            for (pair in HOLDER.entries) regFunc(pair.key, pair.value)
+        fun register(regFunc: (ResourceLocation, SpecialHandler.Factory<*>) -> Any?) {
+            for ((key, value) in HOLDER.entries) regFunc(key, BoxedSpecialHandler(value))
+        }
+
+        class BoxedSpecialHandler(override var inner: SpecialHandlerJS) : SpecialHandler.Factory<SpecialHandler>,
+            BoxedRegistry<SpecialHandlerJS, SpecialHandler.Factory<SpecialHandler>, BoxedSpecialHandler> {
+            override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = inner.tryMatch(pattern, env)
         }
     }
 
     init {
         HOLDER[id] = this
-
-        IXplatAbstractions.INSTANCE?.specialHandlerRegistry?.let { reg ->
-            // hot swap
-            if (reg.containsKey(id)) {
-                (reg[id] as? SpecialHandlerJS)?.let { it.handler = handler }
-                    ?: HexJSNeo.LOGGER.warn("Non-KJS SpecialHandler overrides not supported: $id")
-            }
-        }
+        hotSwap(IXplatAbstractions.INSTANCE?.specialHandlerRegistry)
     }
 
     data class Holder(val action: Action, val display: Component) : SpecialHandler {
