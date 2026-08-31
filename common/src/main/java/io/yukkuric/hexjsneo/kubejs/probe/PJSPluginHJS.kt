@@ -42,7 +42,6 @@ class PJSPluginHJS : ProbeJSPlugin() {
         classDocument.members.removeIf rif@{
             if (it is FieldDecl) {
                 if (it.isStatic) return@rif true
-                if (it.name == "factory") return@rif true
             }
             if (it is ConstructorDecl) return@rif true
             false

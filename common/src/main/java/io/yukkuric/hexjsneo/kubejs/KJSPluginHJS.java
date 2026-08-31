@@ -33,7 +33,6 @@ public class KJSPluginHJS implements KubeJSPlugin {
         event.add("OperatorSideEffect", OperatorSideEffect.class);
 
         // build HexJS object
-        var context = event.context();
-        event.add("HexJS", new HexJS(CUSTOM_JS_CLASSES, context.factory));
+        event.add("HexJS", new HexJS(CUSTOM_JS_CLASSES));
     }
 }

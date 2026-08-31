@@ -1,15 +1,13 @@
 package io.yukkuric.hexjsneo.kubejs.sub.base
 
 import dev.latvian.mods.rhino.Context
-import dev.latvian.mods.rhino.ContextFactory
 import dev.latvian.mods.rhino.NativeJavaClass
 import dev.latvian.mods.rhino.Scriptable
 
 open class SubClassProvider(
     classes: Iterable<Class<*>>? = null,
-    classesNamed: Map<String, Class<*>>? = null,
-    f: ContextFactory
-) : SingletonClassTracker(f) {
+    classesNamed: Map<String, Class<*>>? = null
+) : SingletonClassTracker() {
     companion object {
         val LOADED_CLASSES = HashSet<Class<*>>()
     }
