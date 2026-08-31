@@ -12,6 +12,10 @@ open class SubClassProvider(
         val LOADED_CLASSES = HashSet<Class<*>>()
     }
 
+    override fun getIds(cx: Context?) = sequence {
+        yieldAll(CLASS_MAP.keys.sorted())
+        yieldAll(super.getIds(cx).iterator())
+    }.toList().toTypedArray()
 
     override fun getCustom(cx: Context, name: String, start: Scriptable) = CLASS_MAP[name]?.let {
         NativeJavaClass(cx, start, it)

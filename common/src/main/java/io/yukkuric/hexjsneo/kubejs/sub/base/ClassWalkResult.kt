@@ -2,7 +2,7 @@ package io.yukkuric.hexjsneo.kubejs.sub.base
 
 import io.yukkuric.hexjsneo.HexJSNeo
 
-class ClassWalkResult(val pathPrefix: String) {
+class ClassWalkResult(val pathPrefix: String, val pathFull: String = pathPrefix) {
     val subPackages = HashMap<String, ClassWalkResult>()
     val subClasses = HashMap<String, Class<*>>()
     val loader by lazy { Thread.currentThread().getContextClassLoader() }
@@ -30,7 +30,7 @@ class ClassWalkResult(val pathPrefix: String) {
             return
         }
         val pathSplit = packagePath.split(".", limit = 2)
-        val sub = subPackages.computeIfAbsent(pathSplit[0], ::ClassWalkResult)
+        val sub = subPackages.computeIfAbsent(pathSplit[0]) { ClassWalkResult(it, "$pathFull.$it") }
         return sub.add(cls, if (pathSplit.size > 1) pathSplit[1] else "", clsName)
     }
 }
