@@ -25,6 +25,7 @@ typealias OperateParenMethodRaw<R> = (CastingEnvironment, CastingImage, SpellCon
 typealias OperateMethod = OperateMethodRaw<OperationResult>
 typealias OperateParenMethod = OperateParenMethodRaw<ParenthesizedOperationResult>
 typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingImage, SpellContinuation) -> Any
+typealias ArgsSplitMethod = (ArgsJS, CastingEnvironment, CastingImage, SpellContinuation) -> Any
 
 @Info("Base for all KubeJS-registered actions")
 class ActionJS(
@@ -196,13 +197,21 @@ class ActionJS(
     @Info("KJS-ish paren operate method setter")
     fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = modify { _operateInParens = wrapOperateInParens(newFun) }
 
-    @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
+    @Info("Special KJS-ish operate method setter: accepts a mutable whole stack argument at first of the method")
     fun setOperateMutableStack(newFun: MutableStackMethod) = modify {
         _operate = wrapOperate { env, image, continuation ->
             val stack = (image as LazyCastingImage).getLazyStack(false).value
             val ret = newFun(stack, env, image, continuation)
             // (image as MutableCastingImage).setStack(TreeList.from(stack))
             ret
+        }
+    }
+
+    @Info("Special KJS-ish operate method setter: accepts how many stack elements to be transformed into initial `ArgsJS` object, and inserts it as the first argument, just like a ConstMediaAction or SpellAction")
+    fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) = modify {
+        _operate = wrapOperate { env, image, continuation ->
+            val stack = (image as LazyCastingImage).getLazyStack(false).value
+            newFun(ArgsJS(stack, argCount), env, image, continuation)
         }
     }
     //#endregion

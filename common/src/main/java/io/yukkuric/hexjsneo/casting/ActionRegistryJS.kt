@@ -10,6 +10,7 @@ import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.OverrideHelper
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
+import io.yukkuric.hexjsneo.mixin_interface.LazyCastingImage
 import net.minecraft.resources.ResourceLocation
 
 @Info("Helper class for registry & hot-reload KJS patterns & actions")
@@ -84,6 +85,10 @@ data class ActionRegistryJS(
 
     @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
     fun setOperateMutableStack(newFun: MutableStackMethod) = modify { action.setOperateMutableStack(newFun) }
+
+    @Info("Special KJS-ish operate method setter: accepts how many stack elements to be transformed into initial `ArgsJS` object, and inserts it as the first argument, just like a ConstMediaAction or SpellAction")
+    fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) =
+        modify { action.setOperateArgsSplit(argCount, newFun) }
 
     // @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     val mediaCost by action::mediaCost
