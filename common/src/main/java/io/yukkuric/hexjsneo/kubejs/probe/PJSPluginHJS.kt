@@ -5,6 +5,7 @@ import io.yukkuric.hexjsneo.kubejs.probe.llm.apiRegisterNestedDocs
 import io.yukkuric.hexjsneo.kubejs.sub.HexJS
 import io.yukkuric.hexjsneo.kubejs.sub.api.APINested
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
+import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector.ClassesFlat
 import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
 import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
@@ -12,10 +13,22 @@ import moe.wolfgirl.probejs.typescript.Documents
 import moe.wolfgirl.probejs.typescript.document.Types
 import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
 import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 class PJSPluginHJS : ProbeJSPlugin() {
+    private val SubClassMapMap = HashMap<Class<*>, HashMap<String, Class<*>>>()
+
     override fun init() {
         HexAPICollector.init()
+
+        // build subclass mapper
+        ClassesFlat.forEach perChild@{ (key, cls) ->
+            if ('$' !in key) return@perChild
+            val (pre, post) = key.split("$", limit = 2)
+            val subClassMap = SubClassMapMap.computeIfAbsent((ClassesFlat[pre] ?: return@perChild)) { HashMap() }
+            subClassMap[post] = cls
+        }
     }
 
     override fun transformClass(document: Documents.ClassDocument) {
@@ -27,6 +40,14 @@ class PJSPluginHJS : ProbeJSPlugin() {
         if (targetCls.packageName.startsWith("io.yukkuric.hexjsneo.kubejs.sub.base")) {
             classDocument.members.clear()
             return
+        }
+
+        // subclass assign
+        SubClassMapMap[targetCls]?.let {
+            it.forEach { (key, cls) ->
+                val field = FieldDecl(key, Types.typeOf(Types.clazz(cls)), true)
+                classDocument.members.add(field)
+            }
         }
 
         // limit range
