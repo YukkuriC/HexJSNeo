@@ -28,6 +28,9 @@ import net.minecraft.server.level.ServerLevel
 
 class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
     companion object {
+        @JvmStatic
+        fun type(id: ResourceLocation) = Type(id)
+
         val HOLDER = HashMap<ResourceLocation, Type>()
 
         fun register(regFunc: (ResourceLocation, IotaType<*>) -> Any?) {
