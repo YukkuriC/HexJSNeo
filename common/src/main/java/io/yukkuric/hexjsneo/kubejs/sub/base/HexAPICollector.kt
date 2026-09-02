@@ -8,7 +8,7 @@ import java.util.zip.ZipFile
 object HexAPICollector {
     @JvmStatic
     val ClassesFlat = HashMap<String, Class<*>>()
-    val ClassesNested = ClassWalkResult(HexAPI::class.java.packageName)
+    val ClassesNested = ClassWalkResult("at.petrak.hexcasting")
     var inited = false
 
     fun init() {
