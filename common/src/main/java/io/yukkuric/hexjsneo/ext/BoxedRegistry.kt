@@ -17,6 +17,7 @@ inline fun <reified BOX : BoxedRegistry<BoxedContent, BASE, *>, BASE> BoxedConte
     noinline onSwap: ((box: BOX) -> Unit)? = null
 ) {
     registry ?: return
+    if (!registry.containsKey(id)) return
     registry[id]?.let {
         if (it is BOX) {
             it.inner = this
