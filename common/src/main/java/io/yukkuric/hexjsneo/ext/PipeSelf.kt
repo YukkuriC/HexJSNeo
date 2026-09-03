@@ -7,5 +7,5 @@ interface PipeSelf<SELF : PipeSelf<SELF>> {
     @Info("Calling the function using self, and return self")
     fun modify(action: (self: SELF) -> Unit) = also {
         action(this as SELF)
-    }
+    } as SELF
 }
