@@ -1,5 +1,6 @@
 package io.yukkuric.hexjsneo.kubejs
 
+import at.petrak.hexcasting.api.casting.iota.Iota
 import at.petrak.hexcasting.api.mod.HexTags
 import at.petrak.hexcasting.common.lib.HexRegistries
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin
@@ -7,8 +8,10 @@ import dev.latvian.mods.kubejs.plugin.builtin.event.ServerEvents
 import dev.latvian.mods.kubejs.script.BindingRegistry
 import dev.latvian.mods.kubejs.script.ScriptManager
 import dev.latvian.mods.kubejs.script.ScriptType
+import dev.latvian.mods.kubejs.script.TypeWrapperRegistry
 import dev.latvian.mods.kubejs.server.tag.TagKubeEvent
 import io.yukkuric.hexjsneo.casting.*
+import io.yukkuric.hexjsneo.ext.toIotaKJSStrict
 import io.yukkuric.hexjsneo.kubejs.sub.HexJS
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
 
@@ -20,6 +23,10 @@ class KJSPluginHJS : KubeJSPlugin {
     override fun registerBindings(event: BindingRegistry) {
         // build HexJS object
         event.add("HexJS", HexJS(CUSTOM_JS_CLASSES))
+    }
+
+    override fun registerTypeWrappers(registry: TypeWrapperRegistry) {
+        registry.register(Iota::class.java) { it.toIotaKJSStrict() }
     }
 
     override fun beforeScriptsLoaded(manager: ScriptManager) {
