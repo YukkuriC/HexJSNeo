@@ -11,7 +11,7 @@ open class CastingEnvironmentComponentJS(initKey: String) : CastingEnvironmentCo
     PipeSelf<CastingEnvironmentComponentJS> {
     private var _key: CastingEnvironmentComponent.Key<*> = Key.of(initKey)
     override fun getKey() = _key
-    fun setKey(key: String) = modify { _key = Key.of(key) }
+    fun setKey(key: String) = also { _key = Key.of(key) }
 
     class Key private constructor(val key: String) : CastingEnvironmentComponent.Key<CastingEnvironmentComponentJS> {
         companion object {

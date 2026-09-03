@@ -95,6 +95,11 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
     override fun subIotas() = TODO()
     */
 
+    class IotaAction : ActionJS() {
+        lateinit var iota: IotaJS
+        val data get() = iota.data
+    }
+
     class Type(override val id: ResourceLocation) : IotaType<IotaJS>(), BoxedContent, PipeSelf<Type>,
         Supplier<IotaType<out Iota?>?> {
         var box: BoxedIotaType? = null
@@ -105,7 +110,7 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
         }
 
         //#region executable iota
-        private var delegateAction = ActionJS()
+        private var delegateAction = IotaAction()
         var customExecute = false
         var customExecuteInParens = false
 
@@ -113,6 +118,7 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
             self: IotaJS, vm: CastingVM, world: ServerLevel, continuation: SpellContinuation
         ): CastResult {
             return try {
+                delegateAction.iota = self
                 val resolvedType = ResolvedPatternType.EVALUATED
                 val mid = delegateAction.operate(vm.env, vm.image, continuation)
                 CastResult(self, mid.newContinuation, mid.newImage, mid.sideEffects, resolvedType, mid.sound)
@@ -125,6 +131,7 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
             self: IotaJS, vm: CastingVM, world: ServerLevel, continuation: SpellContinuation
         ): CastResult {
             return try {
+                delegateAction.iota = self
                 val mid = delegateAction.operateInParens(vm.env, vm.image, continuation, self)
                 CastResult(self, mid.newContinuation, mid.newImage, mid.sideEffects, mid.resolutionType, mid.sound)
             } catch (mishap: Mishap) {
@@ -182,46 +189,43 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
         override fun validate(iota: IotaJS, level: ServerLevel) = handlerValidate(iota, level)
         override fun usesListCommas() = handlerListCommas()
 
-        //#region KJS interface executable
-        @Info("KJS-ish operate method setter")
-        fun setOperate(newFun: OperateMethodRaw<*>?) = modify {
-            customExecute = newFun != null
-            delegateAction.setOperate(newFun ?: ActionJS.DUMMY_OPERATE)
+        @Info("KJS-ish operate method setter, accepting whether to use custom execution outside and inside parens, and a callback accepting inner `ActionJS`")
+        fun setOperate(
+            isCustomOperate: Boolean,
+            isCustomOperateInParens: Boolean,
+            methodsSetter: (action: IotaAction) -> Unit
+        ) = also {
+            customExecute = isCustomOperate
+            customExecuteInParens = isCustomOperateInParens
+            methodsSetter(delegateAction)
         }
-
-        @Info("KJS-ish paren operate method setter")
-        fun setOperateInParens(newFun: OperateParenMethodRaw<*>?) = modify {
-            customExecuteInParens = newFun != null
-            delegateAction.setOperateInParens(newFun ?: ActionJS.DUMMY_OPERATE_PARENS)
-        }
-        //#endregion
 
         //#region KJS interface simple
-        fun setTruthy(handler: (IotaJS) -> Boolean) = modify { handlerTruthy = handler }
-        fun setTruthy(value: Boolean) = modify { handlerTruthy = { value } }
+        fun setTruthy(handler: (IotaJS) -> Boolean) = also { handlerTruthy = handler }
+        fun setTruthy(value: Boolean) = also { handlerTruthy = { value } }
 
-        fun setTolerate(handler: (IotaJS, Iota) -> Boolean) = modify { handlerTolerate = handler }
+        fun setTolerate(handler: (IotaJS, Iota) -> Boolean) = also { handlerTolerate = handler }
 
-        fun setDisplay(handler: (IotaJS) -> Component) = modify { handlerDisplay = handler }
-        fun setDisplay(value: Component) = modify { handlerDisplay = { value } }
+        fun setDisplay(handler: (IotaJS) -> Component) = also { handlerDisplay = handler }
+        fun setConstDisplay(value: Component) = also { handlerDisplay = { value } }
 
-        fun setHashCode(handler: (IotaJS) -> Int) = modify { handlerHashCode = handler }
-        fun setHashCode(value: Int) = modify { handlerHashCode = { value } }
+        fun setHashCode(handler: (IotaJS) -> Int) = also { handlerHashCode = handler }
+        fun setHashCode(value: Int) = also { handlerHashCode = { value } }
 
-        fun setSize(handler: (IotaJS) -> Int) = modify { handlerSize = handler }
-        fun setSize(value: Int) = modify { handlerSize = { value } }
+        fun setSize(handler: (IotaJS) -> Int) = also { handlerSize = handler }
+        fun setSize(value: Int) = also { handlerSize = { value } }
 
-        fun setDepth(handler: (IotaJS) -> Int) = modify { handlerDepth = handler }
-        fun setDepth(value: Int) = modify { handlerDepth = { value } }
+        fun setDepth(handler: (IotaJS) -> Int) = also { handlerDepth = handler }
+        fun setDepth(value: Int) = also { handlerDepth = { value } }
 
-        fun setColor(handler: () -> Int) = modify { handlerColor = handler }
-        fun setColor(value: Int) = modify { handlerColor = { value } }
+        fun setColor(handler: () -> Int) = also { handlerColor = handler }
+        fun setColor(value: Int) = also { handlerColor = { value } }
 
-        fun setValidate(handler: (IotaJS, ServerLevel) -> Boolean) = modify { handlerValidate = handler }
-        fun setValidate(value: Boolean) = modify { handlerValidate = { _, _ -> value } }
+        fun setValidate(handler: (IotaJS, ServerLevel) -> Boolean) = also { handlerValidate = handler }
+        fun setValidate(value: Boolean) = also { handlerValidate = { _, _ -> value } }
 
-        fun setListCommas(handler: () -> Boolean) = modify { handlerListCommas = handler }
-        fun setListCommas(value: Boolean) = modify { handlerListCommas = { value } }
+        fun setListCommas(handler: () -> Boolean) = also { handlerListCommas = handler }
+        fun setListCommas(value: Boolean) = also { handlerListCommas = { value } }
         //#endregion
     }
 }

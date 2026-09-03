@@ -78,17 +78,17 @@ data class ActionRegistryJS(
 
     //#region KJS transparent handlers
     @Info("KJS-ish operate method setter")
-    fun setOperate(newFun: OperateMethodRaw<*>) = modify { action.setOperate(newFun) }
+    fun setOperate(newFun: OperateMethodRaw<*>) = also { action.setOperate(newFun) }
 
     @Info("KJS-ish paren operate method setter")
-    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = modify { action.setOperateInParens(newFun) }
+    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = also { action.setOperateInParens(newFun) }
 
     @Info("Special KJS-ish paren operate method setter: accepts a mutable whole stack argument at first of the method")
-    fun setOperateMutableStack(newFun: MutableStackMethod) = modify { action.setOperateMutableStack(newFun) }
+    fun setOperateMutableStack(newFun: MutableStackMethod) = also { action.setOperateMutableStack(newFun) }
 
     @Info("Special KJS-ish operate method setter: accepts how many stack elements to be transformed into initial `ArgsJS` object, and inserts it as the first argument, just like a ConstMediaAction or SpellAction")
     fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) =
-        modify { action.setOperateArgsSplit(argCount, newFun) }
+        also { action.setOperateArgsSplit(argCount, newFun) }
 
     // @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     val mediaCost by action::mediaCost

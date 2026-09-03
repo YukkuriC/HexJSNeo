@@ -23,7 +23,7 @@ class SpecialHandlerJS(override val id: ResourceLocation, var handler: (HexPatte
     }
 
     @Info("KJS-ish chain setter for `tryMatch`")
-    fun setTryMatch(func: (HexPattern, CastingEnvironment) -> Any?) = modify { handler = func }
+    fun setTryMatch(func: (HexPattern, CastingEnvironment) -> Any?) = also { handler = func }
 
     companion object {
         @Info("helper for building `tryMatch` returns")

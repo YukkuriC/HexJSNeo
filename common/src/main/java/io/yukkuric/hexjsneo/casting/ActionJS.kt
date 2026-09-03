@@ -28,7 +28,7 @@ typealias MutableStackMethod = (MutableList<Iota>, CastingEnvironment, CastingIm
 typealias ArgsSplitMethod = (ArgsJS, CastingEnvironment, CastingImage, SpellContinuation) -> Any
 
 @Info("Base for all KubeJS-registered actions")
-class ActionJS(
+open class ActionJS(
     opRaw: OperateMethodRaw<*>? = null, opInParensRaw: OperateParenMethodRaw<*>? = null
 ) : Action, PipeSelf<ActionJS> {
     companion object {
@@ -192,13 +192,13 @@ class ActionJS(
     constructor(opRaw: OperateMethodRaw<*>) : this(opRaw, null)
 
     @Info("KJS-ish operate method setter")
-    fun setOperate(newFun: OperateMethodRaw<*>) = modify { _operate = wrapOperate(newFun) }
+    fun setOperate(newFun: OperateMethodRaw<*>) = also { _operate = wrapOperate(newFun) }
 
     @Info("KJS-ish paren operate method setter")
-    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = modify { _operateInParens = wrapOperateInParens(newFun) }
+    fun setOperateInParens(newFun: OperateParenMethodRaw<*>) = also { _operateInParens = wrapOperateInParens(newFun) }
 
     @Info("Special KJS-ish operate method setter: accepts a mutable whole stack argument at first of the method")
-    fun setOperateMutableStack(newFun: MutableStackMethod) = modify {
+    fun setOperateMutableStack(newFun: MutableStackMethod) = also {
         _operate = wrapOperate { env, image, continuation ->
             val stack = (image as LazyCastingImage).getLazyStack(false).value
             val ret = newFun(stack, env, image, continuation)
@@ -208,7 +208,7 @@ class ActionJS(
     }
 
     @Info("Special KJS-ish operate method setter: accepts how many stack elements to be transformed into initial `ArgsJS` object, and inserts it as the first argument, just like a ConstMediaAction or SpellAction")
-    fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) = modify {
+    fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) = also {
         _operate = wrapOperate { env, image, continuation ->
             val stack = (image as LazyCastingImage).getLazyStack(false).value
             newFun(ArgsJS(stack, argCount), env, image, continuation)
