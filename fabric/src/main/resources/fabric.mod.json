@@ -24,8 +24,7 @@
     ]
   },
   "mixins": [
-    "hexjsneo.mixins.json",
-    "hexjsneo.mixins.fabric.json"
+    "hexjsneo.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.9",

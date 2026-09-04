@@ -1,8 +1,8 @@
 package io.yukkuric.hexjsneo.kubejs.sub.base
 
 import at.petrak.hexcasting.api.HexAPI
-import io.yukkuric.hexjsneo.HexJSEarlyAPI
 import io.yukkuric.hexjsneo.HexJSNeo
+import io.yukkuric.yclib.YCLib
 import java.util.zip.ZipFile
 
 object HexAPICollector {
@@ -16,7 +16,7 @@ object HexAPICollector {
         inited = true
 
         try {
-            val modFile = (HexJSEarlyAPI.modFilePath(HexAPI.MOD_ID) ?: return).toFile()
+            val modFile = (YCLib.modFilePath(HexAPI.MOD_ID) ?: return).toFile()
             ZipFile(modFile).use { jar ->
                 for (entry in jar.entries()) {
                     if (entry.isDirectory) continue
