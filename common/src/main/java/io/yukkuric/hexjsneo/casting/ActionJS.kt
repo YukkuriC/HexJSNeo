@@ -16,6 +16,7 @@ import at.petrak.hexcasting.api.utils.TreeList
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
+import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.ext.*
 import io.yukkuric.hexjsneo.mixin_interface.LazyCastingImage
 import net.minecraft.network.chat.Component
@@ -49,6 +50,7 @@ open class ActionJS(
                     ResolvedPatternType.ESCAPED
                 )
             }
+        @HideFromJS
         val TODO_IMAGE = CastingImage()
     }
 

@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "${mod_name}"
 authors = "YukkuriC"
 description = '''
-Provides a way to register patterns via KubeJS
+Provides a way to create custom contents for Hex Casting via KubeJS.
 '''
 logoFile = "logo.png"
 updateJSONURL = "https://api.modrinth.com/updates/${modid}/neoforge_updates.json"

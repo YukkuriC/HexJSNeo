@@ -7,6 +7,7 @@ import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.Undefined
+import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.ext.*
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -32,10 +33,12 @@ class SpecialHandlerJS(override val id: ResourceLocation, var handler: (HexPatte
 
         val HOLDER = HashMap<ResourceLocation, SpecialHandlerJS>()
 
+        @HideFromJS
         fun register(regFunc: (ResourceLocation, SpecialHandler.Factory<*>) -> Any?) {
             for ((key, value) in HOLDER.entries) regFunc(key, BoxedSpecialHandler(value))
         }
 
+        @HideFromJS
         class BoxedSpecialHandler(override var inner: SpecialHandlerJS) : SpecialHandler.Factory<SpecialHandler>,
             BoxedRegistry<SpecialHandlerJS, SpecialHandler.Factory<SpecialHandler>, BoxedSpecialHandler> {
             override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = inner.tryMatch(pattern, env)

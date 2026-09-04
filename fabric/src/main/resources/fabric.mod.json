@@ -3,7 +3,7 @@
   "id": "hexjsneo",
   "version": "${version}",
   "name": "HexJSNeo",
-  "description": "Provides a way to register patterns via KubeJS",
+  "description": "Provides a way to create custom contents for Hex Casting via KubeJS.",
   "authors": [
     "YukkuriC"
   ],

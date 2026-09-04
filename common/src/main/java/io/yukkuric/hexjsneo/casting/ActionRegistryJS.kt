@@ -5,6 +5,7 @@ import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
 import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
+import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.OverrideHelper
@@ -25,11 +26,12 @@ data class ActionRegistryJS(
         val MAP_NORMAL = HashMap<String, ActionRegistryJS>()
         val MAP_GREAT = HashMap<HexPattern, ActionRegistryJS>()
 
+        @HideFromJS
         fun register(regFunc: (ResourceLocation, ActionRegistryEntry) -> Any?) {
             for (pair in HOLDER.entries) regFunc(pair.key, pair.value.asEntry)
         }
 
-        @Info("convenient helper for weak-typed constructor")
+        @Info("convenient helper for weak-typed constructor, receiving: HexPattern pattern, ResourceLocation id, [ActionJS action, boolean isGreat]")
         @JvmStatic
         fun of(vararg args: Any?): ActionRegistryJS {
             val argPattern = OverrideHelper<HexPattern>("pattern")

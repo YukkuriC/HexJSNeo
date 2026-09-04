@@ -15,6 +15,7 @@ import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import com.google.common.base.Supplier
 import dev.latvian.mods.kubejs.typings.Info
+import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.ext.BoxedContent
 import io.yukkuric.hexjsneo.ext.BoxedRegistry
 import io.yukkuric.hexjsneo.ext.PipeSelf
@@ -26,13 +27,14 @@ import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 
-class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
+class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRaw) {
     companion object {
         @JvmStatic
         fun type(id: ResourceLocation) = Type(id)
 
         val HOLDER = HashMap<ResourceLocation, Type>()
 
+        @HideFromJS
         fun register(regFunc: (ResourceLocation, IotaType<*>) -> Any?) {
             for ((key, value) in HOLDER.entries) {
                 val box = BoxedIotaType(value)
@@ -41,6 +43,7 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
             }
         }
 
+        @HideFromJS
         class BoxedIotaType(override var inner: Type) : IotaType<IotaJS>(),
             BoxedRegistry<Type, IotaType<IotaJS>, BoxedIotaType> {
             override fun codec() = inner.codec()
@@ -71,7 +74,7 @@ class IotaJS(val data: CompoundTag, val typeJSRaw: Type) : Iota(typeJSRaw) {
         val DUMMY_COMMA = { true }
     }
 
-    val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
+    internal val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
 
     override fun isTruthy() = typeJS.handlerTruthy(this)
     override fun toleratesOther(other: Iota) = typeJS.handlerTolerate(this, other)
