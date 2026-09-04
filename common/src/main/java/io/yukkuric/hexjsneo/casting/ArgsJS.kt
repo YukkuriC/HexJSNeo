@@ -9,7 +9,9 @@ import at.petrak.hexcasting.api.casting.mishaps.MishapNotEnoughArgs
 import dev.latvian.mods.kubejs.typings.Info
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.npc.AbstractVillager
 import net.minecraft.world.entity.npc.Villager
+import net.minecraft.world.entity.raid.Raider
 
 @Info("Helpers for handling stack contents")
 class ArgsJS(stack: MutableList<Iota>, n: Int, keep: Boolean = false) {
@@ -47,12 +49,16 @@ class ArgsJS(stack: MutableList<Iota>, n: Int, keep: Boolean = false) {
     fun bool(i: Int) = data.getBool(i, data.size)
 
     fun entity(i: Int): Entity = data.getEntity(world, i, data.size)
+    fun itemEntity(i: Int) = data.getItemEntity(world, i, data.size)
+    fun player(i: Int) = data.getPlayer(world, i, data.size)
+    fun mob(i: Int) = data.getMob(world, i, data.size)
+    fun living(i: Int) = data.getLivingEntityButNotArmorStand(world, i, data.size)
 
-    // fun brainmerge_target(i: Int): Entity {
-    //     val entity = entity(i)
-    //     if (entity is AbstractVillager || entity is Raider) return entity
-    //     throw MishapInvalidIota.of(data[i], data.size - i - 1, "entity.brainmerge_target")
-    // }
+    fun human_like(i: Int): Entity {
+        val entity = entity(i)
+        if (entity is AbstractVillager || entity is Raider) return entity
+        throw MishapInvalidIota.of(data[i], data.size - i - 1, "entity.human_like")
+    }
 
     fun villager(i: Int): Villager {
         val entity = entity(i)

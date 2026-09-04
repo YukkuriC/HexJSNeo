@@ -1,0 +1,5 @@
+{
+  "hexcasting.mishap.invalid_value.class.entity.human_like": "A Humanoid Creature",
+  // no ending comma
+  "foo": "bar"
+}
