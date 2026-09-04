@@ -13,16 +13,12 @@ if (!jarFile.exists()) {
     def jarUrl = "https://github.com/YukkuriC/YCLib-Minecraft/releases/download/$yclib_version/yclib-${yclib_version}.jar"
     println "Downloading ${jarUrl} ..."
     jarFile.parentFile.mkdirs()
-    try {
-        new URL(jarUrl).withInputStream { inputStream ->
-            jarFile.withOutputStream { outputStream ->
-                outputStream << inputStream   // 写入文件
-            }
+    new URL(jarUrl).withInputStream { inputStream ->
+        jarFile.withOutputStream { outputStream ->
+            outputStream << inputStream
         }
-        println "Download completed: $jarFile"
-    } catch (Exception e) {
-        throw new GradleException("Failed to download ${jarUrl}", e)
     }
+    println "Download completed: $jarFile"
 }
 
 architectury {
