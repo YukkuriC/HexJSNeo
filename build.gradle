@@ -7,6 +7,24 @@ plugins {
 
 project.mod_version = "${minecraft_version}-${mod_version_base}"
 
+// https://github.com/YukkuriC/YCLib-Minecraft/releases/
+def jarFile = file("$projectDir/yclib/yclib-${yclib_version}.jar")
+if (!jarFile.exists()) {
+    def jarUrl = "https://github.com/YukkuriC/YCLib-Minecraft/releases/download/$yclib_version/yclib-${yclib_version}.jar"
+    println "Downloading ${jarUrl} ..."
+    jarFile.parentFile.mkdirs()
+    try {
+        new URL(jarUrl).withInputStream { inputStream ->
+            jarFile.withOutputStream { outputStream ->
+                outputStream << inputStream   // 写入文件
+            }
+        }
+        println "Download completed: $jarFile"
+    } catch (Exception e) {
+        throw new GradleException("Failed to download ${jarUrl}", e)
+    }
+}
+
 architectury {
     minecraft = project.minecraft_version
 }
@@ -49,8 +67,7 @@ subprojects {
             name = 'Kotlin for Forge'
             url = 'https://thedarkcolour.github.io/KotlinForForge/'
         }
-        flatDir { dir "libs/$minecraft_version" }
-        flatDir { dir "../libs/$minecraft_version" }
+        flatDir { dir "../yclib" }
     }
 
     var nameForRef = project.name.equals("common") ? "fabric" : project.name
@@ -83,6 +100,9 @@ subprojects {
         modImplementation fileTree(dir: "../libs/$minecraft_version", include: '*.jar')
         implementation fileTree(dir: "libsRaw/$minecraft_version", include: '*.jar')
         implementation fileTree(dir: "../libsRaw/$minecraft_version", include: '*.jar')
+
+        modImplementation "yclib:yclib:$yclib_version"
+        if (project.name != 'common') include "yclib:yclib:$yclib_version"
     }
 
     java {
