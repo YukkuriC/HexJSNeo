@@ -58,12 +58,22 @@ class PJSPluginHJS : ProbeJSPlugin() {
         if (packageName.startsWith("$PACKAGE_PREFIX.casting")) {
             for (subCls in targetCls.declaredClasses) {
                 if (subCls.isAnonymousClass) continue
+                val key = subCls.simpleName.removePrefix(targetCls.simpleName)
+                if (key == "Companion") continue
                 val field = FieldDecl(
-                    subCls.simpleName.removePrefix(targetCls.simpleName),
+                    key,
                     Types.typeOf(Types.clazz(subCls)),
                     true
                 )
                 classDocument.members.add(field)
+            }
+
+            // remove compiler-generated nonsense
+            classDocument.members.removeIf rm@{
+                if (it is FieldDecl) {
+                    if (it.name.startsWith("access$")) return@rm true
+                }
+                false
             }
         }
 
@@ -105,8 +115,12 @@ class PJSPluginHJS : ProbeJSPlugin() {
         yieldAll(SubClassProvider.LOADED_CLASSES)
         yieldAll(HexAPICollector.ClassesFlat.values)
         for (subCls in KJSPluginHJS.CUSTOM_JS_CLASSES) {
-            yield(subCls)
-            yieldAll(subCls.declaredClasses.filter { !it.isAnonymousClass })
+            yieldAll(subCls.yieldAllInner())
         }
     }.toSet()
+
+    private fun Class<*>.yieldAllInner(): Sequence<Class<*>> = sequence {
+        yield(this@yieldAllInner)
+        for (sub in declaredClasses) yieldAll(sub.yieldAllInner())
+    }
 }
