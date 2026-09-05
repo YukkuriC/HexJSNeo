@@ -1,5 +1,6 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
+import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiLevelMembers
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiRegisterNestedDocs
@@ -9,11 +10,14 @@ import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector.ClassesFlat
 import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
+import io.yukkuric.hexjsneo.mixin.probe.AccessorBeans
 import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
+import moe.wolfgirl.probejs.plugin.builtins.InjectBeans
 import moe.wolfgirl.probejs.typescript.Documents
 import moe.wolfgirl.probejs.typescript.document.Types
 import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
 import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
+import moe.wolfgirl.probejs.typescript.document.members.MethodDecl
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -71,7 +75,13 @@ class PJSPluginHJS : ProbeJSPlugin() {
             // remove compiler-generated nonsense
             classDocument.members.removeIf rm@{
                 if (it is FieldDecl) {
-                    if (it.name.startsWith("access$")) return@rm true
+                    if ("$" in it.name) return@rm true
+                }
+                if (it is MethodDecl) {
+                    if ("$" in it.name) return@rm true
+                }
+                if (it is AccessorBeans) {
+                    if ("$" in it.name) return@rm true
                 }
                 false
             }
