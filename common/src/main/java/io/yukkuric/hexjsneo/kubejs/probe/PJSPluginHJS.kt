@@ -1,6 +1,5 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
-import io.yukkuric.hexjsneo.HexJSNeo
 import io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiLevelMembers
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiRegisterNestedDocs
@@ -12,14 +11,11 @@ import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
 import io.yukkuric.hexjsneo.mixin.probe.AccessorBeans
 import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
-import moe.wolfgirl.probejs.plugin.builtins.InjectBeans
 import moe.wolfgirl.probejs.typescript.Documents
 import moe.wolfgirl.probejs.typescript.document.Types
 import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
 import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
 import moe.wolfgirl.probejs.typescript.document.members.MethodDecl
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 private const val PACKAGE_PREFIX = "io.yukkuric.hexjsneo"
 
