@@ -52,6 +52,7 @@ class KJSPluginHJS : KubeJSPlugin {
             SpecialHandlerJS::class.java,
             IotaJS::class.java,
             CastingEnvironmentComponentJS::class.java,
+            MishapJS::class.java,
 
             ArgsJS::class.java
         )

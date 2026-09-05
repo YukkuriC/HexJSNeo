@@ -41,6 +41,10 @@ Provides a way to create custom contents for Hex Casting via KubeJS.
 - `CastingEnvironmentComponentJS`: vanilla but in JS, with more convenient Key creation
     - each component takes a key string as the first constructor arg, from which the `Key` is auto-created & cached (`setKey` to change it later)
     - usages and types same as vanilla
+- `MishapJS`: highly customizable mishap types
+    - declaring the type using `MishapJS.type()` first, quite similar to `IotaJS`
+    - calling `type.create()` or `type.create(data)` for a mishap of this type
+    - KJS-ish piped methods to override all behaviors of created mishaps
 
 ### QoL Features
 

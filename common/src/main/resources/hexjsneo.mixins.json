@@ -6,6 +6,7 @@
   "client": [
   ],
   "mixins": [
+    "AccessorMishap",
     "ForceTreeList",
     "LazyCastingImageImp",
     "MutableActionRegistryEntry",
