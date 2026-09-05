@@ -172,7 +172,7 @@ open class ActionJS(
 
     //#region
     // ConstMediaAction
-    @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
+    @get:Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     var mediaCost: Long = 0
     @Info("returns a ConsumeMedia side-effect if mediaCost > 0")
     fun consumeMedia() = if (mediaCost > 0) OperatorSideEffect.ConsumeMedia(mediaCost) else null

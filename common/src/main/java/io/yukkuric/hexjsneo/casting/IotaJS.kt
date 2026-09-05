@@ -30,6 +30,7 @@ import net.minecraft.server.level.ServerLevel
 class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRaw) {
     companion object {
         @JvmStatic
+        @Info("create an iota type holding all custom logics")
         fun type(id: ResourceLocation) = Type(id)
 
         val HOLDER = HashMap<ResourceLocation, Type>()
@@ -82,6 +83,9 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
     override fun hashCode() = typeJS.handlerHashCode(this)
     override fun size() = typeJS.handlerSize(this)
     override fun depth() = typeJS.handlerDepth(this)
+
+    @get:Info("a slot to store temporary calculated objects; not guaranteed how long it lasts")
+    var cache: Any? = null
 
     // executable iota
     override fun execute(vm: CastingVM, world: ServerLevel, continuation: SpellContinuation) =

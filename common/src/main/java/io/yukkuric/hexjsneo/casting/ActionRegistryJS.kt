@@ -76,7 +76,7 @@ data class ActionRegistryJS(
         }
     }
 
-    val asEntry by lazy { ActionRegistryEntry(prototype, action) }
+    private val asEntry by lazy { ActionRegistryEntry(prototype, action) }
 
     //#region KJS transparent handlers
     @Info("KJS-ish operate method setter")
@@ -92,7 +92,7 @@ data class ActionRegistryJS(
     fun setOperateArgsSplit(argCount: Int, newFun: ArgsSplitMethod) =
         also { action.setOperateArgsSplit(argCount, newFun) }
 
-    // @Info("set >0 to auto-add a ConsumeMedia into default side effect list")
+    @get:Info("set >0 to auto-add a ConsumeMedia into default side effect list")
     val mediaCost by action::mediaCost
     @Info("mishaps if CastEnv can't afford the amount")
     fun preCheckMedia(env: CastingEnvironment, cost: Long) = action.preCheckMedia(env, cost)
