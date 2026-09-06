@@ -10,6 +10,7 @@ import at.petrak.hexcasting.api.casting.iota.Iota
 import at.petrak.hexcasting.api.casting.iota.IotaType
 import at.petrak.hexcasting.api.casting.math.HexDir
 import at.petrak.hexcasting.api.casting.math.HexPattern
+import at.petrak.hexcasting.api.casting.math.HexSignature
 import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import at.petrak.hexcasting.xplat.IXplatAbstractions
@@ -73,6 +74,8 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         val DUMMY_VALIDATE = { _: IotaJS, _: ServerLevel -> true }
         val DUMMY_COLOR = { 0x00ffff }
         val DUMMY_COMMA = { true }
+
+        private val STUB_PATTERN_FOR_MISHAP = HexPattern.fromAngleString("", HexDir.WEST, false)
     }
 
     internal val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
@@ -156,7 +159,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
                 self,
                 continuation,
                 if (wipeParens) vm.image.withResetEscape() else null,
-                listOf(DoMishap(mishap, Mishap.Context(HexPattern(HexDir.WEST, mutableListOf()), null))),
+                listOf(DoMishap(mishap, Mishap.Context(STUB_PATTERN_FOR_MISHAP, null))),
                 mishap.resolutionType(vm.env),
                 HexEvalSounds.MISHAP.get()
             )

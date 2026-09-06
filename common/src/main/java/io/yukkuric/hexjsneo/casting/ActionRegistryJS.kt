@@ -53,7 +53,7 @@ data class ActionRegistryJS(
             val pat = argPattern.get() ?: throw IllegalArgumentException("missing prototype")
             return ActionRegistryJS(
                 pat,
-                argId.get { HexJSNeo.modLoc(pat.anglesSignature()) },
+                argId.get { HexJSNeo.modLoc(pat.signature.toAnglesString()) },
                 argAction.get(::ActionJS),
                 argIsGreat.get(false)
             )
@@ -63,7 +63,7 @@ data class ActionRegistryJS(
     init {
         HOLDER[id] = this
         if (isGreat) MAP_GREAT[prototype] = this
-        else MAP_NORMAL[prototype.anglesSignature()] = this
+        else MAP_NORMAL[prototype.signature.toAnglesString()] = this
 
         IXplatAbstractions.INSTANCE?.actionRegistry?.let { reg ->
             // replace existing registry for hot swap
