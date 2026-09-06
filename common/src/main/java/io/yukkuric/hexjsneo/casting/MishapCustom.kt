@@ -11,7 +11,7 @@ data class MishapCustom(val text: Component) : Mishap() {
     constructor(text: String) : this(Component.literal(text))
 
     override fun accentColor(env: CastingEnvironment, errorCtx: Context) = dyeColor(DyeColor.PURPLE)
-    override fun execute(env: CastingEnvironment, errorCtx: Context, stack: TreeList<Iota>) = TreeList.empty<Iota>()
+    override fun execute(env: CastingEnvironment, errorCtx: Context, stack: TreeList<Iota>) = stack
     override fun errorMessage(env: CastingEnvironment, errorCtx: Context) = text
 
     override fun getLocalizedMessage() = text.string
