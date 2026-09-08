@@ -30,7 +30,8 @@ subprojects {
 
     base {
         // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
-        archivesName = "$rootProject.archives_name-$project.name"
+        def platformName = project.name == "neoforge" ? "forge" : project.name
+        archivesName = "$rootProject.archives_name-$platformName"
     }
 
     repositories {
