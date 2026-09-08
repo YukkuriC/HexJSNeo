@@ -1,5 +1,6 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
+import dev.latvian.mods.kubejs.KubeJSPlugin
 import io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiLevelMembers
 import io.yukkuric.hexjsneo.kubejs.probe.llm.apiRegisterNestedDocs
@@ -9,20 +10,25 @@ import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector.ClassesFlat
 import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
 import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
-import io.yukkuric.hexjsneo.mixin.probe.AccessorBeans
-import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
-import moe.wolfgirl.probejs.typescript.Documents
-import moe.wolfgirl.probejs.typescript.document.Types
-import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
-import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
-import moe.wolfgirl.probejs.typescript.document.members.MethodDecl
+import zzzank.probejs.lang.typescript.RequestAwareFiles
+import zzzank.probejs.lang.typescript.ScriptDump
+import zzzank.probejs.lang.typescript.code.Code
+import zzzank.probejs.lang.typescript.code.member.BeanDecl
+import zzzank.probejs.lang.typescript.code.member.ClassDecl
+import zzzank.probejs.lang.typescript.code.member.FieldDecl
+import zzzank.probejs.lang.typescript.code.member.MethodDecl
+import zzzank.probejs.lang.typescript.code.type.Types
+import zzzank.probejs.plugin.ProbeJSPlugin
+import zzzank.probejs.plugin.ProbeJSPlugins
 
 private const val PACKAGE_PREFIX = "io.yukkuric.hexjsneo"
 
-class PJSPluginHJS : ProbeJSPlugin() {
+class PJSPluginHJS : KubeJSPlugin(), ProbeJSPlugin {
     private val SubClassMapMap = HashMap<Class<*>, HashMap<String, Class<*>>>()
 
     override fun init() {
+        // ProbeJS-Legacy discovers plugins only via ProbeJSPlugins, so self-register on KubeJS load
+        ProbeJSPlugins.register(this)
         HexAPICollector.init()
 
         // build subclass mapper
@@ -34,23 +40,33 @@ class PJSPluginHJS : ProbeJSPlugin() {
         }
     }
 
-    override fun transformClass(document: Documents.ClassDocument) {
-        val classInfo = document.classInfo()
-        val classDocument = document.document()
-        val targetCls = classInfo.clazz()
+    override fun modifyFiles(files: RequestAwareFiles) {
+        for (file in files.globalFiles().values) {
+            val classDecl = file.findCodeNullable(ClassDecl::class.java) ?: continue
+            val targetCls = classDecl.nativeClazz?.getOriginal() ?: continue
+            transformClass(classDecl, targetCls)
+        }
+        apiRegisterNestedDocs(files, HexAPICollector.ClassesNested, emptyList())
+    }
+
+    private fun transformClass(classDecl: ClassDecl, targetCls: Class<*>) {
         val packageName = targetCls.packageName
 
         // clean doc-gen class inners
         if (packageName.startsWith("$PACKAGE_PREFIX.kubejs.sub.base")) {
-            classDocument.members.clear()
+            classDecl.fields.clear()
+            classDecl.constructors.clear()
+            classDecl.methods.clear()
+            classDecl.bodyCode.clear()
             return
         }
 
         // subclass assign
         SubClassMapMap[targetCls]?.let {
             it.forEach { (key, cls) ->
-                val field = FieldDecl(key, Types.typeOf(Types.clazz(cls)), true)
-                classDocument.members.add(field)
+                val field = FieldDecl(key, Types.typeOf(Types.type(cls)))
+                field.isStatic = true
+                classDecl.fields.add(field)
             }
         }
 
@@ -61,43 +77,43 @@ class PJSPluginHJS : ProbeJSPlugin() {
                 val key = subCls.simpleName.removePrefix(targetCls.simpleName)
                 if (key == "Companion") continue
                 val field = FieldDecl(
-                    key,
-                    Types.typeOf(Types.clazz(subCls)),
-                    true
+                    key, Types.typeOf(Types.type(subCls))
                 )
-                classDocument.members.add(field)
+                field.isStatic = true
+                classDecl.fields.add(field)
             }
 
             // remove compiler-generated nonsense
-            classDocument.members.removeIf rm@{
+            val rmFields = rm@{ it: Code ->
                 if (it is FieldDecl) {
                     if ("$" in it.name) return@rm true
                 }
                 if (it is MethodDecl) {
                     if ("$" in it.name) return@rm true
                 }
-                if (it is AccessorBeans) {
+                if (it is BeanDecl) {
                     if ("$" in it.name) return@rm true
                 }
                 false
             }
+            classDecl.fields.removeIf(rmFields)
+            classDecl.methods.removeIf(rmFields)
+            classDecl.bodyCode.removeIf(rmFields)
         }
 
         // HexJS dynamic objects
         if (packageName.startsWith("$PACKAGE_PREFIX.kubejs.sub")) {
             // remove inner stuff
-            classDocument.members.removeIf rif@{
-                if (it is FieldDecl) {
-                    if (it.isStatic) return@rif true
-                }
-                if (it is ConstructorDecl) return@rif true
+            classDecl.fields.removeIf rif@{
+                if (it.isStatic) return@rif true
                 false
             }
+            classDecl.constructors.clear()
 
             // API nested special handler
             if (targetCls == APINested::class.java) {
                 // Generated by GLM-5.3
-                classDocument.members.addAll(apiLevelMembers(HexAPICollector.ClassesNested, emptyList()))
+                classDecl.fields.addAll(apiLevelMembers(HexAPICollector.ClassesNested, emptyList()))
                 return
             }
 
@@ -106,17 +122,13 @@ class PJSPluginHJS : ProbeJSPlugin() {
 
             // manual class dump
             for ((name, cls) in obj.contents()) {
-                val field = FieldDecl(name, Types.typeOf(Types.clazz(cls)), false)
-                classDocument.members.add(field)
+                val field = FieldDecl(name, Types.typeOf(Types.type(cls)))
+                classDecl.fields.add(field)
             }
         }
     }
 
-    override fun modifyClasses(classDocuments: Documents.ClassAccessor) {
-        apiRegisterNestedDocs(classDocuments, HexAPICollector.ClassesNested, emptyList())
-    }
-
-    override fun provideClassForDiscovery() = sequence {
+    override fun provideJavaClass(scriptDump: ScriptDump) = sequence {
         yield(HexJS::class.java)
         yieldAll(SubClassProvider.LOADED_CLASSES)
         yieldAll(HexAPICollector.ClassesFlat.values)

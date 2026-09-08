@@ -5,7 +5,6 @@ import dev.latvian.mods.rhino.Context
 import dev.latvian.mods.rhino.ScriptRuntime
 import dev.latvian.mods.rhino.ScriptableObject
 import dev.latvian.mods.rhino.Scriptable
-import dev.latvian.mods.rhino.util.DefaultValueTypeHint
 
 open class HexJSPluginObject : ScriptableObject() {
     val fnToString by lazy { ToStringFn(this) }
