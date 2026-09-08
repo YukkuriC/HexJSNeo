@@ -10,15 +10,16 @@ import kotlin.collections.CollectionsKt;
 import org.spongepowered.asm.mixin.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Mixin(CastingImage.class)
 public class LazyCastingImageImp implements LazyCastingImage {
     @Shadow
     @Final
-    private TreeList<Iota> stack;
+    private List<Iota> stack;
     @Shadow
     @Final
-    private TreeList<CastingImage.ParenthesizedIota> parenthesized;
+    private List<CastingImage.ParenthesizedIota> parenthesized;
 
     private Lazy<ArrayList<Iota>> _lazyStack;
     private Lazy<ArrayList<CastingImage.ParenthesizedIota>> _lazyParenList;
