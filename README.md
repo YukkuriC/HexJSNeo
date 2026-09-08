@@ -51,7 +51,8 @@ Provides a way to create custom contents for Hex Casting via KubeJS.
 - Hot-swap everything
     - everything, simple as `/kjs reload startup-scripts`
     - covers: actions (entry action & prototype replaced in-place), special handlers, iota types
-    - not for those haven't created on startup, but it's possible to match later-created pattern actions using a special handler :3
+    - not for those haven't created on startup, but it's possible to match later-created pattern actions [using a SPECIAL handler](https://github.com/YukkuriC/HexJSNeo/wiki/SpecialHandlerJS#2-a-special-special-handler-registry-catcher) :3
+    - `CastingEnvironmentComponentJS` and `MishapJS` are born temporary and not covered here
 - API & packages importer: `HexJS.API` & `HexJS.APIFlat`
     - exposes all Hex Casting classes scanned from the mod jar, either nested by package (`HexJS.API.<...package>.<Class>`) or flat (`HexJS.APIFlat`)
 
