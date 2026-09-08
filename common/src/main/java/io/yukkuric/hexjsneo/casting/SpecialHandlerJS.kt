@@ -18,6 +18,7 @@ class SpecialHandlerJS(override val id: ResourceLocation, var handler: (HexPatte
     override fun tryMatch(pattern: HexPattern, env: CastingEnvironment) = wrapTryKJS {
         when (val ret = handler(pattern, env)) {
             null, is Undefined -> null
+            "undefined" -> null // fuck kjs what r u doing
             is SpecialHandler -> ret
             else -> ret.asUnsupportedKJS
         }

@@ -83,6 +83,7 @@ open class ActionJS(
 
         // null or undefined = empty list
         if (ret is Undefined || ret == null) ret = listOf<Iota>()
+        if (ret == "undefined") ret = listOf<Iota>()
 
         // list: add stack or sideEffect
         if (ret is Array<*>) ret = ret.asIterable()
