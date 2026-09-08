@@ -7,11 +7,10 @@ import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.HexJSNeo
-import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.OverrideHelper
+import io.yukkuric.hexjsneo.ext.PipeSelf
 import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
-import io.yukkuric.hexjsneo.mixin_interface.LazyCastingImage
 import net.minecraft.resources.ResourceLocation
 
 @Info("Helper class for registry & hot-reload KJS patterns & actions")
@@ -53,7 +52,7 @@ data class ActionRegistryJS(
             val pat = argPattern.get() ?: throw IllegalArgumentException("missing prototype")
             return ActionRegistryJS(
                 pat,
-                argId.get { HexJSNeo.modLoc(pat.signature.toAnglesString()) },
+                argId.get { HexJSNeo.modLoc(pat.anglesSignature()) },
                 argAction.get(::ActionJS),
                 argIsGreat.get(false)
             )
@@ -63,7 +62,7 @@ data class ActionRegistryJS(
     init {
         HOLDER[id] = this
         if (isGreat) MAP_GREAT[prototype] = this
-        else MAP_NORMAL[prototype.signature.toAnglesString()] = this
+        else MAP_NORMAL[prototype.anglesSignature()] = this
 
         IXplatAbstractions.INSTANCE?.actionRegistry?.let { reg ->
             // replace existing registry for hot swap

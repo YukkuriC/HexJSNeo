@@ -48,11 +48,11 @@ class ArgsJS(stack: MutableList<Iota>, n: Int, keep: Boolean = false) {
     fun vec3(i: Int) = data.getVec3(i, data.size)
     fun bool(i: Int) = data.getBool(i, data.size)
 
-    fun entity(i: Int): Entity = data.getEntity(world, i, data.size)
-    fun itemEntity(i: Int) = data.getItemEntity(world, i, data.size)
-    fun player(i: Int) = data.getPlayer(world, i, data.size)
-    fun mob(i: Int) = data.getMob(world, i, data.size)
-    fun living(i: Int) = data.getLivingEntityButNotArmorStand(world, i, data.size)
+    fun entity(i: Int): Entity = data.getEntity(i, data.size)
+    fun itemEntity(i: Int) = data.getItemEntity(i, data.size)
+    fun player(i: Int) = data.getPlayer(i, data.size)
+    fun mob(i: Int) = data.getMob(i, data.size)
+    fun living(i: Int) = data.getLivingEntityButNotArmorStand(i, data.size)
 
     fun human_like(i: Int): Entity {
         val entity = entity(i)

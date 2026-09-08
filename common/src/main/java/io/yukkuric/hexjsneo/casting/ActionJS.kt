@@ -37,7 +37,7 @@ open class ActionJS(
         val DUMMY_OPERATE: OperateMethod =
             { env: CastingEnvironment, image: CastingImage, continuation: SpellContinuation ->
                 env.castingEntity?.sendSystemMessage(Component.literal("hello hexjs"))
-                OperationResult(image, listOf(), continuation, HexEvalSounds.NORMAL_EXECUTE.get())
+                OperationResult(image, listOf(), continuation, HexEvalSounds.NORMAL_EXECUTE)
             }
         @Info("default paren operate: do nothing but adding self pattern")
         val DUMMY_OPERATE_PARENS: OperateParenMethod =
@@ -46,7 +46,7 @@ open class ActionJS(
                     image.withNewParenthesized(thisIota),
                     listOf(),
                     continuation,
-                    HexEvalSounds.NORMAL_EXECUTE.get(),
+                    HexEvalSounds.NORMAL_EXECUTE,
                     ResolvedPatternType.ESCAPED
                 )
             }
@@ -104,7 +104,7 @@ open class ActionJS(
                 TODO_IMAGE,
                 sideEffects,
                 overrideCont.get(continuation),
-                overrideSound.get(HexEvalSounds.NORMAL_EXECUTE::get),
+                overrideSound.get(HexEvalSounds.NORMAL_EXECUTE),
             )
         }
 
