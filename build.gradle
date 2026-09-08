@@ -1,5 +1,5 @@
 plugins {
-    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
+    id 'dev.architectury.loom' version '1.9+' apply false
     id 'architectury-plugin' version '3.4-SNAPSHOT'
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
     id "org.jetbrains.kotlin.jvm" version "2.2.21"
@@ -53,14 +53,14 @@ subprojects {
         }
     }
 
-    var nameForRef = project.name.equals("common") ? "fabric" : project.name
+    var nameForRef = project.name == "common" ? "fabric" : project.name == "neoforge" ? "forge" : project.name
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
         mappings loom.officialMojangMappings()
 
         compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
 
-        // modImplementation("at.petra-k.hexcasting:hexcasting-${nameForRef}-${project.minecraft_version}:${project.hexcastingVersion}") { transitive = false }
+        modImplementation("at.petra-k.hexcasting:hexcasting-${nameForRef}-${project.minecraft_version}:${project.hexcastingVersion}") { transitive = false }
 
         // TODO update to 1.21
         // required dep
@@ -72,7 +72,7 @@ subprojects {
         // interop dep
         modImplementation "curse.maven:hexparse-1148731:7676910"
         modImplementation "curse.maven:hexoverpowered-1173074:7733501"
-        ["kubejs-238086:8715199", "rhino-416294:8463898", "probejs-585406:8304356"]
+        ["kubejs-238086:5853326", "rhino-416294:6186971", "probejs-585406:5227399", "probejs-585406:5227399", "probejs-legacy-956446:8175835"]
                 .forEach { modImplementation("curse.maven:$it") }
         // helpers in runClient
         // modImplementation "curse.maven:jade-324717:6855440"
@@ -81,8 +81,6 @@ subprojects {
 
         modImplementation fileTree(dir: "libs/$minecraft_version", include: '*.jar')
         modImplementation fileTree(dir: "../libs/$minecraft_version", include: '*.jar')
-        implementation fileTree(dir: "libsRaw/$minecraft_version", include: '*.jar')
-        implementation fileTree(dir: "../libsRaw/$minecraft_version", include: '*.jar')
     }
 
     java {
@@ -91,17 +89,17 @@ subprojects {
         // If you remove this line, sources will not be generated.
         withSourcesJar()
 
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 21
+        it.options.release = 17
     }
 
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "21"
+            jvmTarget = "17"
         }
     }
 
