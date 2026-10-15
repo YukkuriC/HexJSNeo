@@ -1,26 +1,19 @@
 package io.yukkuric.hexjsneo.casting
 
-import at.petrak.hexcasting.api.casting.eval.CastResult
-import at.petrak.hexcasting.api.casting.eval.ResolvedPatternType
+import at.petrak.hexcasting.api.casting.eval.*
 import at.petrak.hexcasting.api.casting.eval.sideeffects.OperatorSideEffect.DoMishap
-import at.petrak.hexcasting.api.casting.eval.vm.CastingVM
-import at.petrak.hexcasting.api.casting.eval.vm.FrameEvaluate
-import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
+import at.petrak.hexcasting.api.casting.eval.vm.*
 import at.petrak.hexcasting.api.casting.iota.Iota
 import at.petrak.hexcasting.api.casting.iota.IotaType
 import at.petrak.hexcasting.api.casting.math.HexDir
 import at.petrak.hexcasting.api.casting.math.HexPattern
-import at.petrak.hexcasting.api.casting.math.HexSignature
 import at.petrak.hexcasting.api.casting.mishaps.Mishap
 import at.petrak.hexcasting.common.lib.hex.HexEvalSounds
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import com.google.common.base.Supplier
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.util.HideFromJS
-import io.yukkuric.hexjsneo.ext.BoxedContent
-import io.yukkuric.hexjsneo.ext.BoxedRegistry
-import io.yukkuric.hexjsneo.ext.PipeSelf
-import io.yukkuric.hexjsneo.ext.hotSwap
+import io.yukkuric.hexjsneo.ext.*
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.chat.Component
@@ -61,7 +54,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         }
 
         // iota dummy
-        val DUMMY_TRUTHY = { _: IotaJS -> true }
+        val DUMMY_TRUTHY = { _: IotaJS, _: CastingEnvironment? -> true }
         val DUMMY_TOLERATE = tolerate@{ self: IotaJS, other: Iota ->
             if (!typesMatch(self, other) || other !is IotaJS) return@tolerate false
             self.data == other.data
@@ -80,7 +73,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
 
     internal val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
 
-    override fun isTruthy() = typeJS.handlerTruthy(this)
+    override fun isTruthy(env: CastingEnvironment?) = typeJS.handlerTruthy(this, env)
     override fun toleratesOther(other: Iota) = typeJS.handlerTolerate(this, other)
     override fun display() = typeJS.handlerDisplay(this)
     override fun hashCode() = typeJS.handlerHashCode(this)
@@ -211,8 +204,8 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         }
 
         //#region KJS interface simple
-        fun setTruthy(handler: (IotaJS) -> Boolean) = also { handlerTruthy = handler }
-        fun setTruthy(value: Boolean) = also { handlerTruthy = { value } }
+        fun setTruthy(handler: (IotaJS, CastingEnvironment?) -> Boolean) = also { handlerTruthy = handler }
+        fun setTruthy(value: Boolean) = also { handlerTruthy = { _, _ -> value } }
 
         fun setTolerate(handler: (IotaJS, Iota) -> Boolean) = also { handlerTolerate = handler }
 
