@@ -205,7 +205,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
 
         //#region KJS interface simple
         fun setTruthy(handler: (IotaJS, CastingEnvironment?) -> Boolean) = also { handlerTruthy = handler }
-        fun setTruthy(value: Boolean) = also { handlerTruthy = { _, _ -> value } }
+        fun setConstTruthy(value: Boolean) = also { handlerTruthy = { _, _ -> value } }
 
         fun setTolerate(handler: (IotaJS, Iota) -> Boolean) = also { handlerTolerate = handler }
 
@@ -213,22 +213,22 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         fun setConstDisplay(value: Component) = also { handlerDisplay = { value } }
 
         fun setHashCode(handler: (IotaJS) -> Int) = also { handlerHashCode = handler }
-        fun setHashCode(value: Int) = also { handlerHashCode = { value } }
+        fun setConstHashCode(value: Int) = also { handlerHashCode = { value } }
 
         fun setSize(handler: (IotaJS) -> Int) = also { handlerSize = handler }
-        fun setSize(value: Int) = also { handlerSize = { value } }
+        fun setConstSize(value: Int) = also { handlerSize = { value } }
 
         fun setDepth(handler: (IotaJS) -> Int) = also { handlerDepth = handler }
-        fun setDepth(value: Int) = also { handlerDepth = { value } }
+        fun setConstDepth(value: Int) = also { handlerDepth = { value } }
 
         fun setColor(handler: () -> Int) = also { handlerColor = handler }
-        fun setColor(value: Int) = also { handlerColor = { value } }
+        fun setConstColor(value: Int) = also { handlerColor = { value } }
 
         fun setValidate(handler: (IotaJS, ServerLevel) -> Boolean) = also { handlerValidate = handler }
-        fun setValidate(value: Boolean) = also { handlerValidate = { _, _ -> value } }
+        fun setConstValidate(value: Boolean) = also { handlerValidate = { _, _ -> value } }
 
         fun setListCommas(handler: () -> Boolean) = also { handlerListCommas = handler }
-        fun setListCommas(value: Boolean) = also { handlerListCommas = { value } }
+        fun setConstListCommas(value: Boolean) = also { handlerListCommas = { value } }
         //#endregion
     }
 }
