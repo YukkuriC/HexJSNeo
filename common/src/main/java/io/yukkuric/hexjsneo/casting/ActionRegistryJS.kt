@@ -2,16 +2,14 @@ package io.yukkuric.hexjsneo.casting
 
 import at.petrak.hexcasting.api.casting.ActionRegistryEntry
 import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
+import at.petrak.hexcasting.api.casting.math.HexDir
 import at.petrak.hexcasting.api.casting.math.HexPattern
 import at.petrak.hexcasting.xplat.IXplatAbstractions
 import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.HexJSNeo
-import io.yukkuric.hexjsneo.ext.PipeSelf
-import io.yukkuric.hexjsneo.ext.OverrideHelper
-import io.yukkuric.hexjsneo.ext.asUnsupportedKJS
+import io.yukkuric.hexjsneo.ext.*
 import io.yukkuric.hexjsneo.mixin.MutableActionRegistryEntry
-import io.yukkuric.hexjsneo.mixin_interface.LazyCastingImage
 import net.minecraft.resources.ResourceLocation
 
 @Info("Helper class for registry & hot-reload KJS patterns & actions")
@@ -22,6 +20,8 @@ data class ActionRegistryJS(
     val isGreat: Boolean
 ) : PipeSelf<ActionRegistryJS> {
     companion object {
+        val REGEX_PATTERN = Regex("(?:(east|west|north_east|north_west|south_east|south_west),\\s*)?([wedsaq]+)")
+
         val HOLDER = HashMap<ResourceLocation, ActionRegistryJS>()
         val MAP_NORMAL = HashMap<String, ActionRegistryJS>()
         val MAP_GREAT = HashMap<HexPattern, ActionRegistryJS>()
@@ -43,9 +43,27 @@ data class ActionRegistryJS(
                 when (it) {
                     is HexPattern -> argPattern.update(it)
                     is ActionJS -> argAction.update(it)
-                    is String -> argId.update(ResourceLocation.tryParse(it) ?: it.asUnsupportedKJS)
                     is ResourceLocation -> argId.update(it)
                     is Boolean -> argIsGreat.update(it)
+
+                    // string testing both pattern str and ResLoc
+                    is String -> {
+                        // try pattern
+                        val match = REGEX_PATTERN.matchEntire(it.lowercase())
+                        if (match != null) {
+                            val dir = match.groupValues[1].uppercase().let { dir ->
+                                if (dir == "") HexDir.EAST else HexDir.valueOf(dir)
+                            }
+                            val sig = match.groupValues[2]
+                            argPattern.update(HexPattern.fromAngleString(sig, dir, false))
+                        }
+
+                        // try resloc or fail
+                        else {
+                            argId.update(ResourceLocation.tryParse(it) ?: it.asUnsupportedKJS)
+                        }
+                    }
+
                     else -> it.asUnsupportedKJS
                 }
             }
