@@ -2,6 +2,7 @@ package io.yukkuric.hexjsneo.forge.events
 
 import at.petrak.hexcasting.common.lib.HexRegistries
 import io.yukkuric.hexjsneo.casting.ActionRegistryJS
+import io.yukkuric.hexjsneo.casting.ArithmeticJS
 import io.yukkuric.hexjsneo.casting.IotaJS
 import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
 import net.minecraft.core.Registry
@@ -28,6 +29,7 @@ class HJSForgeEventsListener {
             bindReg(HexRegistries.ACTION, ActionRegistryJS::register)
             bindReg(HexRegistries.SPECIAL_HANDLER, SpecialHandlerJS::register)
             bindReg(HexRegistries.IOTA_TYPE, IotaJS::register)
+            bindReg(HexRegistries.ARITHMETIC, ArithmeticJS::register)
         }
     }
 

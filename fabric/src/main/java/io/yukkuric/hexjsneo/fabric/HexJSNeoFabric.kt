@@ -1,16 +1,11 @@
 package io.yukkuric.hexjsneo.fabric
 
 import at.petrak.hexcasting.xplat.IXplatAbstractions
-import io.yukkuric.hexjsneo.casting.ActionRegistryJS
-import io.yukkuric.hexjsneo.casting.IotaJS
-import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
+import io.yukkuric.hexjsneo.casting.*
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.api.ModInitializer
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceLocation
-import java.nio.file.Path
 
 class HexJSNeoFabric : ModInitializer {
     private fun <T : Any> bindReg(reg: Registry<T>, loader: ((ResourceLocation, T) -> Any?) -> Any?) {
@@ -22,6 +17,7 @@ class HexJSNeoFabric : ModInitializer {
             bindReg(it.actionRegistry, ActionRegistryJS::register)
             bindReg(it.specialHandlerRegistry, SpecialHandlerJS::register)
             bindReg(it.iotaTypeRegistry, IotaJS::register)
+            bindReg(it.arithmeticRegistry, ArithmeticJS::register)
         }
     }
 
