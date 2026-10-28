@@ -51,6 +51,7 @@ class KJSPluginHJS : KubeJSPlugin {
             ActionRegistryJS::class.java,
             SpecialHandlerJS::class.java,
             IotaJS::class.java,
+            ArithmeticJS::class.java,
             CastingEnvironmentComponentJS::class.java,
             MishapJS::class.java,
 

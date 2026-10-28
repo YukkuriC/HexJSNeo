@@ -45,6 +45,19 @@ data class ArithmeticJS(override val id: ResourceLocation) : Arithmetic, BoxedCo
         fun resetEngine() {
             fArithEngine.set(null, null)
         }
+
+        @JvmStatic
+        @Info("collection of builtin operator patterns")
+        val BUILTIN_OPERATIONS = object : HashMap<String, HexPattern>() {
+            override fun get(key: String) = super.get(key.lowercase())
+        }.also { self ->
+            Arithmetic::class.java.declaredFields
+                .filter { it.type == HexPattern::class.java }
+                .forEach { field ->
+                    val name = field.name
+                    self.put(name.lowercase(), field.get(null) as HexPattern)
+                }
+        }
     }
 
     private var box: BoxedArithmetic? = null
@@ -64,7 +77,13 @@ data class ArithmeticJS(override val id: ResourceLocation) : Arithmetic, BoxedCo
 
     private val opMap = HashMap<HexPattern, Operator>()
 
-    fun setOperator(pattern: HexPattern, op: Operator) = also {
+    @Info("link given operator to certain pattern")
+    fun setOperator(key: Any?, op: Operator) = also {
+        val pattern = when (key) {
+            is HexPattern -> key
+            is String -> BUILTIN_OPERATIONS[key] ?: throw IllegalArgumentException("unknown builtin operator: $key")
+            else -> key.asUnsupportedKJS
+        }
         opMap[pattern] = op
     }
 }
