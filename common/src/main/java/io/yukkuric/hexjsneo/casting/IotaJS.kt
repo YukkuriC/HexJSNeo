@@ -15,13 +15,12 @@ import dev.latvian.mods.kubejs.typings.Info
 import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.ext.*
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.RegistryFriendlyByteBuf
+import net.minecraft.nbt.Tag
 import net.minecraft.network.chat.Component
-import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 
-class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRaw) {
+class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRaw, data) {
     companion object {
         @JvmStatic
         @Info("create an iota type holding all custom logics")
@@ -41,11 +40,11 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         @HideFromJS
         class BoxedIotaType(override var inner: Type) : IotaType<IotaJS>(),
             BoxedRegistry<Type, IotaType<IotaJS>, BoxedIotaType> {
-            override fun codec() = inner.codec()
-            override fun streamCodec() = inner.streamCodec()
+            override fun deserialize(data: Tag?, level: ServerLevel?) = inner.deserialize(data, level)
+
             override fun color() = inner.color()
-            override fun validate(iota: IotaJS, level: ServerLevel) = inner.validate(iota, level)
             override fun usesListCommas() = inner.usesListCommas()
+            override fun display(data: Tag?) = inner.display(data)
 
             override fun equals(other: Any?): Boolean {
                 if (other is Type) return this.inner == other
@@ -59,7 +58,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
             if (!typesMatch(self, other) || other !is IotaJS) return@tolerate false
             self.data == other.data
         }
-        val DUMMY_DISPLAY = { self: IotaJS -> Component.literal("[${self.typeJS.id} ${self.data}]") }
+        val DUMMY_DISPLAY = { data: CompoundTag, type: Type -> Component.literal("[${type.id} ${data}]") }
         val DUMMY_HASHCODE = { self: IotaJS -> self.data.hashCode() }
         val DUMMY_SIZE_DEPTH = { _: IotaJS -> 1 }
 
@@ -68,14 +67,16 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         val DUMMY_COLOR = { 0x00ffff }
         val DUMMY_COMMA = { true }
 
-        private val STUB_PATTERN_FOR_MISHAP = HexPattern.fromAngleString("", HexDir.WEST, false)
+        private val STUB_PATTERN_FOR_MISHAP = HexPattern.fromAnglesUnchecked("", HexDir.WEST)
     }
 
     internal val typeJS get() = typeJSRaw.box?.inner ?: typeJSRaw
 
     override fun isTruthy(env: CastingEnvironment?) = typeJS.handlerTruthy(this, env)
     override fun toleratesOther(other: Iota) = typeJS.handlerTolerate(this, other)
-    override fun display() = typeJS.handlerDisplay(this)
+    override fun serialize() = data
+
+    override fun display() = typeJS.handlerDisplay(data, typeJS)
     override fun hashCode() = typeJS.handlerHashCode(this)
     override fun size() = typeJS.handlerSize(this)
     override fun depth() = typeJS.handlerDepth(this)
@@ -154,7 +155,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
                 if (wipeParens) vm.image.withResetEscape() else null,
                 listOf(DoMishap(mishap, Mishap.Context(STUB_PATTERN_FOR_MISHAP, null))),
                 mishap.resolutionType(vm.env),
-                HexEvalSounds.MISHAP.get()
+                HexEvalSounds.MISHAP
             )
         }
         //#endregion
@@ -162,7 +163,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         // iota handlers
         var handlerTruthy = DUMMY_TRUTHY
         var handlerTolerate = DUMMY_TOLERATE
-        var handlerDisplay: (IotaJS) -> Component = DUMMY_DISPLAY
+        var handlerDisplay: (CompoundTag, Type) -> Component = DUMMY_DISPLAY
         var handlerHashCode = DUMMY_HASHCODE
         var handlerSize = DUMMY_SIZE_DEPTH
         var handlerDepth = DUMMY_SIZE_DEPTH
@@ -179,18 +180,12 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
             }
         }
 
-        private val _consumer = { data: CompoundTag -> IotaJS(data, this) }
-        private val _codec = CompoundTag.CODEC.xmap(_consumer, IotaJS::data).fieldOf("data")
-        private val _streamCodec =
-            ByteBufCodecs.COMPOUND_TAG.map(_consumer, IotaJS::data).mapStream({ b: RegistryFriendlyByteBuf -> b })
-
-        override fun codec() = _codec
-        override fun streamCodec() = _streamCodec
+        override fun deserialize(tag: Tag?, world: ServerLevel?) = IotaJS(tag as CompoundTag, this)
         //#endregion
 
         override fun color() = handlerColor()
-        override fun validate(iota: IotaJS, level: ServerLevel) = handlerValidate(iota, level)
         override fun usesListCommas() = handlerListCommas()
+        override fun display(tag: Tag?) = handlerDisplay(tag as CompoundTag, this)
 
         @Info("KJS-ish operate method setter, accepting whether to use custom execution outside and inside parens, and a callback accepting inner `ActionJS`")
         fun setOperate(
@@ -209,8 +204,8 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
 
         fun setTolerate(handler: (IotaJS, Iota) -> Boolean) = also { handlerTolerate = handler }
 
-        fun setDisplay(handler: (IotaJS) -> Component) = also { handlerDisplay = handler }
-        fun setConstDisplay(value: Component) = also { handlerDisplay = { value } }
+        fun setDisplay(handler: (CompoundTag, Type) -> Component) = also { handlerDisplay = handler }
+        fun setConstDisplay(value: Component) = also { handlerDisplay = { _, _ -> value } }
 
         fun setHashCode(handler: (IotaJS) -> Int) = also { handlerHashCode = handler }
         fun setConstHashCode(value: Int) = also { handlerHashCode = { value } }

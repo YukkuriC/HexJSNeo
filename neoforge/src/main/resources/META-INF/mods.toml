@@ -12,29 +12,26 @@ description = '''
 Provides a way to create custom contents for Hex Casting via KubeJS.
 '''
 logoFile = "logo.png"
-updateJSONURL = "https://api.modrinth.com/updates/${modid}/neoforge_updates.json"
+updateJSONURL = "https://api.modrinth.com/updates/${modid}/forge_updates.json"
 displayURL = "https://modrinth.com/mod/${modid}"
-
-[[mixins]]
-config = "hexjsneo.mixins.json"
 
 [[dependencies.${modid}]]
 modId = "minecraft"
-type = "required"
+mandatory = true
 versionRange = "[0,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.${modid}]]
 modId = "hexcasting"
-type = "required"
+mandatory = true
 versionRange = "[0,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.${modid}]]
 modId = "kubejs"
-type = "required"
+mandatory = true
 versionRange = "[0,)"
 ordering = "AFTER"
 side = "BOTH"

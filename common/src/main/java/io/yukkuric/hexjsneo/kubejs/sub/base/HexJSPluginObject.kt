@@ -2,6 +2,7 @@ package io.yukkuric.hexjsneo.kubejs.sub.base
 
 import dev.latvian.mods.rhino.BaseFunction
 import dev.latvian.mods.rhino.Context
+import dev.latvian.mods.rhino.ScriptRuntime
 import dev.latvian.mods.rhino.ScriptableObject
 import dev.latvian.mods.rhino.Scriptable
 import dev.latvian.mods.rhino.util.DefaultValueTypeHint
@@ -27,8 +28,8 @@ open class HexJSPluginObject : ScriptableObject() {
         return if (v !== NOT_FOUND) v else super.get(cx, name, start)
     }
 
-    override fun getDefaultValue(cx: Context, typeHint: DefaultValueTypeHint?): Any? =
-        if (typeHint == null || typeHint == DefaultValueTypeHint.STRING) toString()
+    override fun getDefaultValue(cx: Context, typeHint: Class<*>?) =
+        if (typeHint == null || typeHint == ScriptRuntime.StringClass) toString()
         else super.getDefaultValue(cx, typeHint)
 
     override fun toString() = "[${javaClass.simpleName}]"
@@ -38,10 +39,10 @@ open class HexJSPluginObject : ScriptableObject() {
         override fun call(cx: Context?, scope: Scriptable?, thisObj: Scriptable?, args: Array<out Any?>?) =
             obj.toString()
 
-        override fun getDefaultValue(cx: Context, typeHint: DefaultValueTypeHint?): Any? = when (typeHint) {
-            null, DefaultValueTypeHint.STRING -> toString()
-            DefaultValueTypeHint.BOOLEAN -> true
-            DefaultValueTypeHint.NUMBER -> Double.NaN
+        override fun getDefaultValue(cx: Context, typeHint: Class<*>?) = when (typeHint) {
+            null, ScriptRuntime.StringClass -> toString()
+            ScriptRuntime.BooleanClass -> true
+            ScriptRuntime.NumberClass -> Double.NaN
             else -> this
         }
 
