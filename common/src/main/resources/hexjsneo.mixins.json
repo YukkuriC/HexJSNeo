@@ -10,8 +10,7 @@
     "ForceTreeList",
     "LazyCastingImageImp",
     "MutableActionRegistryEntry",
-    "MutableCastingImage",
-    "probe.AccessorBeans"
+    "MutableCastingImage"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -4,27 +4,25 @@ package io.yukkuric.hexjsneo.kubejs.probe.llm
 import io.yukkuric.hexjsneo.kubejs.sub.api.APINested
 import io.yukkuric.hexjsneo.kubejs.sub.base.ClassWalkResult
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
-import moe.wolfgirl.probejs.typescript.ClassPath
-import moe.wolfgirl.probejs.typescript.Documents
-import moe.wolfgirl.probejs.typescript.document.ClassDecl
-import moe.wolfgirl.probejs.typescript.document.Types
-import moe.wolfgirl.probejs.typescript.document.base.Code
-import moe.wolfgirl.probejs.typescript.document.base.KindAware
-import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
+import zzzank.probejs.lang.java.clazz.ClassPath
+import zzzank.probejs.lang.typescript.RequestAwareFiles
+import zzzank.probejs.lang.typescript.code.member.ClassDecl
+import zzzank.probejs.lang.typescript.code.member.FieldDecl
+import zzzank.probejs.lang.typescript.code.type.Types
 
 // fields exposed by one level of the API tree, mirroring APINested.getCustom()/getIds()
-internal fun apiLevelMembers(node: ClassWalkResult, path: List<String>): List<Code> {
-    val members = ArrayList<Code>()
+internal fun apiLevelMembers(node: ClassWalkResult, path: List<String>): List<FieldDecl> {
+    val members = ArrayList<FieldDecl>()
     val pkg = (listOf(HexAPICollector.ClassesNested.pathPrefix) + path).joinToString(".")
     for (name in node.subPackages.keys.sorted()) {
         // a class entry shadows a same-named package entry, same as getCustom()
         if (name in node.subClasses) continue
-        val field = FieldDecl(name, Types.clazz(apiSynthPath(path + name)), false)
+        val field = FieldDecl(name, Types.type(apiSynthPath(path + name)))
         // field.addComments("package $pkg.$name")
         members.add(field)
     }
     for ((name, cls) in node.subClasses.toSortedMap()) {
-        members.add(FieldDecl(name, Types.typeOf(Types.clazz(cls)), false))
+        members.add(FieldDecl(name, Types.typeOf(Types.type(cls))))
     }
     return members
 }
@@ -35,22 +33,20 @@ internal fun apiSynthName(path: List<String>) = "\$APINested_" + path.joinToStri
 // placed in the same package as APINested so field references resolve as local
 // symbols inside the same index.d.ts, without generating imports
 internal fun apiSynthPath(path: List<String>) =
-    ClassPath(APINested::class.java.packageName.split(".") + listOf(apiSynthName(path)))
+    ClassPath.ofArtificial((APINested::class.java.packageName.split(".") + listOf(apiSynthName(path))).joinToString("."))
 
 // register one synthetic document per nested API package level (e.g. $APINested_spell);
 // safe to reference from transformClass since Code.setResolvedSymbols runs at dump time
-internal fun apiRegisterNestedDocs(accessor: Documents.ClassAccessor, node: ClassWalkResult, path: List<String>) {
+internal fun apiRegisterNestedDocs(files: RequestAwareFiles, node: ClassWalkResult, path: List<String>) {
     for ((name, sub) in node.subPackages) {
         val subPath = path + name
         val decl = ClassDecl(
-            true, KindAware.Kind.CLASS,
-            apiSynthName(subPath),
-            Types.NEVER, listOf(), listOf(),
-            apiLevelMembers(sub, subPath)
+            apiSynthName(subPath), null, listOf(), listOf()
         )
         // nobody cares comments for temp classes
         // decl.addComments("package " + (listOf(HexAPICollector.ClassesNested.pathPrefix) + subPath).joinToString("."))
-        accessor.addClassDocument(apiSynthPath(subPath), decl)
-        apiRegisterNestedDocs(accessor, sub, subPath)
+        decl.fields.addAll(apiLevelMembers(sub, subPath))
+        files.requestOrCreate(apiSynthPath(subPath)).addCode(decl)
+        apiRegisterNestedDocs(files, sub, subPath)
     }
 }
