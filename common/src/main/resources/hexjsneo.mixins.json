@@ -9,6 +9,7 @@
     "AccessorMishap",
     "ForceTreeList",
     "LazyCastingImageImp",
+    "MixinSharedDump",
     "MutableActionRegistryEntry",
     "MutableCastingImage"
   ],
