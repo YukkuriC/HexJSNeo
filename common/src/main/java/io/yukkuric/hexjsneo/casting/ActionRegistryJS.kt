@@ -55,7 +55,7 @@ data class ActionRegistryJS(
                                 if (dir == "") HexDir.EAST else HexDir.valueOf(dir)
                             }
                             val sig = match.groupValues[2]
-                            argPattern.update(HexPattern.fromAngleString(sig, dir, false))
+                            argPattern.update(HexPattern.fromAnglesUnchecked(sig, dir))
                         }
 
                         // try resloc or fail
