@@ -5,10 +5,7 @@ import at.petrak.hexcasting.api.mod.HexTags
 import at.petrak.hexcasting.common.lib.HexRegistries
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin
 import dev.latvian.mods.kubejs.plugin.builtin.event.ServerEvents
-import dev.latvian.mods.kubejs.script.BindingRegistry
-import dev.latvian.mods.kubejs.script.ScriptManager
-import dev.latvian.mods.kubejs.script.ScriptType
-import dev.latvian.mods.kubejs.script.TypeWrapperRegistry
+import dev.latvian.mods.kubejs.script.*
 import dev.latvian.mods.kubejs.server.tag.TagKubeEvent
 import io.yukkuric.hexjsneo.casting.*
 import io.yukkuric.hexjsneo.ext.toIotaKJSStrict
@@ -52,6 +49,7 @@ class KJSPluginHJS : KubeJSPlugin {
             SpecialHandlerJS::class.java,
             IotaJS::class.java,
             ArithmeticJS::class.java,
+            OperatorJS::class.java,
             CastingEnvironmentComponentJS::class.java,
             MishapJS::class.java,
 
