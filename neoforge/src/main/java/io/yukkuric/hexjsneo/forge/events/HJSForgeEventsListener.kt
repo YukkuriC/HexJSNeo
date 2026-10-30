@@ -8,9 +8,9 @@ import io.yukkuric.hexjsneo.casting.SpecialHandlerJS
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.resources.ResourceLocation
-import net.neoforged.bus.api.SubscribeEvent
-import net.neoforged.fml.ModContainer
-import net.neoforged.neoforge.registries.RegisterEvent
+import net.minecraftforge.eventbus.api.SubscribeEvent
+import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.registries.RegisterEvent
 
 
 class HJSForgeEventsListener {
@@ -34,9 +34,9 @@ class HJSForgeEventsListener {
     }
 
     companion object {
-        fun load(modContainer: ModContainer) {
+        fun load() {
             // NeoForge.EVENT_BUS.register(ForgeBus)
-            val modBus = modContainer.eventBus!!
+            val modBus = Mod.EventBusSubscriber.Bus.MOD.bus().get()
             modBus.register(ModBus)
         }
     }
