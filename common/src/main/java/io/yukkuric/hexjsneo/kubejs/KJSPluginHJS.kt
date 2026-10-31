@@ -27,7 +27,18 @@ class KJSPluginHJS : KubeJSPlugin {
     }
 
     override fun beforeScriptsLoaded(manager: ScriptManager) {
-        if (manager.scriptType != ScriptType.SERVER) return
+        when (manager.scriptType) {
+            ScriptType.SERVER -> onReloadServer()
+            ScriptType.STARTUP -> onReloadStartUp()
+            else -> {}
+        }
+    }
+
+    fun onReloadStartUp() {
+        ArithmeticJS.resetEngine()
+    }
+
+    fun onReloadServer() {
         ServerEvents.TAGS.listenJava(ScriptType.SERVER, HexRegistries.ACTION.location()) {
             val e = (it as TagKubeEvent)
             val greatActionIds = ActionRegistryJS.MAP_GREAT.values.map { it.id }
