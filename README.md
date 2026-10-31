@@ -45,12 +45,15 @@ Provides a way to create custom contents for Hex Casting via KubeJS.
     - declaring the type using `MishapJS.type()` first, quite similar to `IotaJS`
     - calling `type.create()` or `type.create(data)` for a mishap of this type
     - KJS-ish piped methods to override all behaviors of created mishaps
+- `ArithmeticJS` and `OperatorJS`: custom arithmetic holders and their pattern operators
+    - declarative operators with iota-type predicates (`Accepts`) and piped operate setters, either raw or args-split
+    - bind operators to builtin or custom patterns, with the engine auto-invalidated on script reload
 
 ### QoL Features
 
 - Hot-swap everything
     - everything, simple as `/kjs reload startup-scripts`
-    - covers: actions (entry action & prototype replaced in-place), special handlers, iota types
+    - covers: actions (entry action & prototype replaced in-place), special handlers, iota types, arithmetics (including their operators)
     - not for those haven't created on startup, but it's possible to match later-created pattern actions [using a SPECIAL handler](https://github.com/YukkuriC/HexJSNeo/wiki/SpecialHandlerJS#2-a-special-special-handler-registry-catcher) :3
     - `CastingEnvironmentComponentJS` and `MishapJS` are born temporary and not covered here
 - API & packages importer: `HexJS.API` & `HexJS.APIFlat`
