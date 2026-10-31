@@ -56,7 +56,7 @@ class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, acce
             @JvmStatic
             @Info("if the iota of given position is of given type")
             fun ofTypeAt(idx: Int, raw: Any?): IotaMultiPredicate {
-                val type = _toType(raw)
+                val type by lazy { _toType(raw) }
                 return _wrapListPredicate test@{
                     if (it.size <= idx) return@test false
                     return@test type == it[idx].type
@@ -65,7 +65,7 @@ class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, acce
             @JvmStatic
             @Info("if the iotas each matches given types")
             fun ofTypes(vararg raw: Any?): IotaMultiPredicate {
-                val types = raw.map(::_toType)
+                val types by lazy { raw.map(::_toType) }
                 return _wrapListPredicate test@{
                     if (it.size < types.size) return@test false
                     for (i in 0 until types.size) if (types[i] != it[i].type) return@test false
@@ -75,7 +75,7 @@ class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, acce
             @JvmStatic
             @Info("if all the iotas are of given type")
             fun allOfType(raw: Any?): IotaMultiPredicate {
-                val type = _toType(raw)
+                val type by lazy { _toType(raw) }
                 return IotaMultiPredicate test@{
                     for (iota in it) if (type != iota.type) return@test false
                     return@test true
