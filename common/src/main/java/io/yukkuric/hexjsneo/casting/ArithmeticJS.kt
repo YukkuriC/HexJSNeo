@@ -81,7 +81,10 @@ data class ArithmeticJS(override val id: ResourceLocation) : Arithmetic, BoxedCo
     fun setOperator(key: Any?, op: Operator) = also {
         val pattern = when (key) {
             is HexPattern -> key
-            is String -> BUILTIN_OPERATIONS[key] ?: throw IllegalArgumentException("unknown builtin operator: $key")
+            is String -> BUILTIN_OPERATIONS[key]
+                ?: key.toHexPattern()
+                ?: throw IllegalArgumentException("unknown builtin operator: $key")
+
             else -> key.asUnsupportedKJS
         }
         opMap[pattern] = op
