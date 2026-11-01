@@ -65,7 +65,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
 
         // iota type dummy
         val DUMMY_VALIDATE = { _: IotaJS, _: ServerLevel -> true }
-        val DUMMY_COLOR = { 0x00ffff }
+        val DUMMY_COLOR = { 0xff00ffff.toDouble() } // no int/long in JS
         val DUMMY_COMMA = { true }
 
         private val STUB_PATTERN_FOR_MISHAP = HexPattern.fromAngleString("", HexDir.WEST, false)
@@ -188,7 +188,7 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         override fun streamCodec() = _streamCodec
         //#endregion
 
-        override fun color() = handlerColor()
+        override fun color() = (handlerColor().toLong() and 0xFFFFFFFFL).toInt() // no int/long in JS
         override fun validate(iota: IotaJS, level: ServerLevel) = handlerValidate(iota, level)
         override fun usesListCommas() = handlerListCommas()
 
@@ -221,8 +221,8 @@ class IotaJS(val data: CompoundTag, private val typeJSRaw: Type) : Iota(typeJSRa
         fun setDepth(handler: (IotaJS) -> Int) = also { handlerDepth = handler }
         fun setConstDepth(value: Int) = also { handlerDepth = { value } }
 
-        fun setColor(handler: () -> Int) = also { handlerColor = handler }
-        fun setConstColor(value: Int) = also { handlerColor = { value } }
+        fun setColor(handler: () -> Double) = also { handlerColor = handler }
+        fun setConstColor(value: Double) = also { handlerColor = { value } }
 
         fun setValidate(handler: (IotaJS, ServerLevel) -> Boolean) = also { handlerValidate = handler }
         fun setConstValidate(value: Boolean) = also { handlerValidate = { _, _ -> value } }
