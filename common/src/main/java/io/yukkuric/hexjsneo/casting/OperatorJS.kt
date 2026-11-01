@@ -10,6 +10,7 @@ import at.petrak.hexcasting.api.casting.iota.IotaType
 import at.petrak.hexcasting.common.lib.hex.HexIotaTypes
 import com.google.common.collect.Lists
 import dev.latvian.mods.kubejs.typings.Info
+import dev.latvian.mods.rhino.util.HideFromJS
 import io.yukkuric.hexjsneo.ext.*
 
 class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, accepts), PipeSelf<OperatorJS> {
@@ -38,6 +39,7 @@ class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, acce
 
     class Accepts {
         companion object {
+            @HideFromJS
             inline fun _wrapListPredicate(crossinline test: (seq: List<Iota>) -> Boolean) =
                 IotaMultiPredicate { seq ->
                     val list = when (seq) {
@@ -47,6 +49,7 @@ class OperatorJS(arity: Int, accepts: IotaMultiPredicate) : Operator(arity, acce
                     test(list)
                 }
 
+            @HideFromJS
             inline fun _toType(raw: Any?) = when (raw) {
                 is IotaType<*> -> raw
                 is String -> raw.toHexRegistry(HexIotaTypes.REGISTRY)

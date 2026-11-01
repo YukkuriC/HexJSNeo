@@ -1,21 +1,19 @@
 package io.yukkuric.hexjsneo.kubejs.probe
 
+import io.yukkuric.hexjsneo.casting.ArithmeticJS
+import io.yukkuric.hexjsneo.casting.OperatorJS
 import io.yukkuric.hexjsneo.kubejs.KJSPluginHJS
-import io.yukkuric.hexjsneo.kubejs.probe.llm.apiLevelMembers
-import io.yukkuric.hexjsneo.kubejs.probe.llm.apiRegisterNestedDocs
+import io.yukkuric.hexjsneo.kubejs.probe.llm.*
 import io.yukkuric.hexjsneo.kubejs.sub.HexJS
 import io.yukkuric.hexjsneo.kubejs.sub.api.APINested
-import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector
+import io.yukkuric.hexjsneo.kubejs.sub.base.*
 import io.yukkuric.hexjsneo.kubejs.sub.base.HexAPICollector.ClassesFlat
-import io.yukkuric.hexjsneo.kubejs.sub.base.SingletonClassTracker
-import io.yukkuric.hexjsneo.kubejs.sub.base.SubClassProvider
 import io.yukkuric.hexjsneo.mixin.probe.AccessorBeans
 import moe.wolfgirl.probejs.plugin.ProbeJSPlugin
 import moe.wolfgirl.probejs.typescript.Documents
+import moe.wolfgirl.probejs.typescript.base.DocumentRegistrar
 import moe.wolfgirl.probejs.typescript.document.Types
-import moe.wolfgirl.probejs.typescript.document.members.ConstructorDecl
-import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
-import moe.wolfgirl.probejs.typescript.document.members.MethodDecl
+import moe.wolfgirl.probejs.typescript.document.members.*
 
 private const val PACKAGE_PREFIX = "io.yukkuric.hexjsneo"
 
@@ -34,6 +32,10 @@ class PJSPluginHJS : ProbeJSPlugin() {
         }
     }
 
+    override fun addSpecialDocuments(registrar: DocumentRegistrar) {
+        addCustomTypeDocs(registrar)
+    }
+
     override fun transformClass(document: Documents.ClassDocument) {
         val classInfo = document.classInfo()
         val classDocument = document.document()
@@ -44,6 +46,23 @@ class PJSPluginHJS : ProbeJSPlugin() {
         if (packageName.startsWith("$PACKAGE_PREFIX.kubejs.sub.base")) {
             classDocument.members.clear()
             return
+        }
+
+        // redirect method param types
+        when (targetCls) {
+            ArithmeticJS::class.java -> {
+                rewriteParam(document, "setOperator", 0, OPERATOR_KEY)
+            }
+
+            OperatorJS::class.java -> {
+                rewriteParam(document, "bindArithmetic", 1, OPERATOR_KEY)
+            }
+
+            OperatorJS.Accepts::class.java -> {
+                rewriteParam(document, "ofTypeAt", 1, IOTA_TYPE)
+                rewriteParam(document, "ofTypes", 0, IOTA_TYPE.asArray())
+                rewriteParam(document, "allOfType", 0, IOTA_TYPE)
+            }
         }
 
         // subclass assign

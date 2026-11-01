@@ -8,9 +8,9 @@ import moe.wolfgirl.probejs.typescript.ClassPath
 import moe.wolfgirl.probejs.typescript.Documents
 import moe.wolfgirl.probejs.typescript.document.ClassDecl
 import moe.wolfgirl.probejs.typescript.document.Types
-import moe.wolfgirl.probejs.typescript.document.base.Code
-import moe.wolfgirl.probejs.typescript.document.base.KindAware
+import moe.wolfgirl.probejs.typescript.document.base.*
 import moe.wolfgirl.probejs.typescript.document.members.FieldDecl
+import moe.wolfgirl.probejs.typescript.document.members.ParamDecl
 
 // fields exposed by one level of the API tree, mirroring APINested.getCustom()/getIds()
 internal fun apiLevelMembers(node: ClassWalkResult, path: List<String>): List<Code> {
@@ -52,5 +52,20 @@ internal fun apiRegisterNestedDocs(accessor: Documents.ClassAccessor, node: Clas
         // decl.addComments("package " + (listOf(HexAPICollector.ClassesNested.pathPrefix) + subPath).joinToString("."))
         accessor.addClassDocument(apiSynthPath(subPath), decl)
         apiRegisterNestedDocs(accessor, sub, subPath)
+    }
+}
+
+internal fun rewriteParam(
+    document: Documents.ClassDocument,
+    methodName: String,
+    index: Int,
+    type: Type
+) {
+    for (pair in document.methodDocs()) {
+        val info = pair.first
+        val decl = pair.second
+        if (info.name() != methodName || decl.params.size <= index) continue
+        val old = decl.params[index]
+        decl.params[index] = ParamDecl(old.name, type, old.isRest, old.optional)
     }
 }
