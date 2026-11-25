@@ -1,7 +1,6 @@
 package io.yukkuric.hexjsneo.ext
 
 import at.petrak.hexcasting.api.HexAPI
-import at.petrak.hexcasting.api.casting.eval.vm.SpellContinuation
 import at.petrak.hexcasting.api.casting.iota.*
 import at.petrak.hexcasting.api.casting.math.HexDir
 import at.petrak.hexcasting.api.casting.math.HexPattern
@@ -57,7 +56,7 @@ fun Any?.toIotaKJS(visited: IdentityHashMap<Any?, Any?>? = null): Iota? = when (
     // objects
     is Entity -> EntityIota(this)
     is HexPattern -> PatternIota(this)
-    is SpellContinuation -> ContinuationIota(this)
+    // is SpellContinuation -> ContinuationIota(this) // conflicts with action continuation override, removed
 
     // vec3
     is Vec3 -> Vec3Iota(this)
